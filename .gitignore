@@ -169,3 +169,9 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+uv.lock
+.python-version
+.idea
+logs
+data/*
+!data/.gitkeep

@@ -1,0 +1,16 @@
+[project]
+name = "revgrokapi"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.8",
+    "fire>=0.7.0",
+    "loguru>=0.7.3",
+    "pytz>=2025.1",
+    "tiktoken>=0.9.0",
+    "tortoise-orm[asyncpg]>=0.24.1",
+    "tqdm>=4.67.1",
+    "uvicorn>=0.34.0",
+]

@@ -63,6 +63,7 @@ async def grok_chat(model: str, prompt: str):
 
             chunk = chunk_json.get("result", {}).get("response", {}).get("modelResponse", {})\
             .get("message", "")
+            chunk = "\n" + chunk
 
         yield chunk
         response_text += chunk

@@ -33,9 +33,9 @@ async def grok_chat(model: str, prompt: str):
         yield ""
         yield "<think>\n"
 
-    if deepresearch:
-        yield "---\n"
-        yield ">"
+    # if deepresearch:
+        # yield "---\n"
+        # yield ">"
 
 
     current_message_id = None

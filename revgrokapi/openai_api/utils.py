@@ -33,23 +33,37 @@ async def grok_chat(model: str, prompt: str):
         yield ""
         yield "<think>\n"
 
+    if deepresearch:
+        yield ">"
+
 
 
     is_thinking = None  # Track current thinking state
 
     async for (chunk, chunk_json) in grok_client.chat(prompt, model, reasoning, deepresearch):
 
-        # Check if thinking state changed
+        # Check if thinking state changed: reasoning case
         if "isThinking" in str(chunk_json):
             new_thinking_state = chunk_json["result"]["response"]["isThinking"]
             logger.debug(f"isThinking: {new_thinking_state}\n new_thinking_state: {new_thinking_state}")
-            if new_thinking_state and "\n" in chunk:
+            if new_thinking_state and "\n" in chunk and reasoning:
                 chunk = chunk.replace("\n", "\n>")
             # If we're transitioning from thinking to not thinking, close the think tag
             if (is_thinking) and (new_thinking_state == False) and reasoning:
                 yield "</think>\n"
                 # Update thinking state
                 is_thinking = new_thinking_state
+
+        if deepresearch:
+            if chunk.endswith("\n"):
+                chunk = chunk[:-1] + "\n>"
+
+
+        if "modelResponse" in str(chunk_json):
+
+            chunk = chunk_json.get("result", {}).get("response", {}).get("modelResponse", {})\
+            .get("message", "")
+
         yield chunk
         response_text += chunk
     logger.info(f"""{{

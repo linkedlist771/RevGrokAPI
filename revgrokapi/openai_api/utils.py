@@ -25,8 +25,8 @@ async def grok_chat(model: str, prompt: str):
     reasoning = "reasoner" in model.lower()
     deepresearch = "deepresearch" in model.lower() # give me a deep survey about the video generation type model
     response_text = ""
-    if "deepresearch" in model.lower():
-        model = "grok-3"
+    # if "deepresearch" in model.lower():
+    model = "grok-3"
 
     async for chunk in grok_client.chat(prompt, model, reasoning, deepresearch):
         yield chunk

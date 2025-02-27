@@ -51,8 +51,8 @@ class GrokClient:
                 # yield chunk
                 chunk_json = json.loads(chunk)
                 if "error" in chunk:
-                    error_message = chunk_json.get("error").get("message")
-                    yield error_message
+                    # error_message = chunk_json.get("error").get("message")
+                    yield chunk
                     return
                 response = (
                     chunk_json.get("result", {}).get("response", {}).get("token", "")

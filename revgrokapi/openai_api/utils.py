@@ -36,7 +36,7 @@ async def grok_chat(model: str, prompt: str):
 
     async for (chunk, chunk_json) in grok_client.chat(prompt, model, reasoning, deepresearch):
         if "isThinking" in str(chunk_json):
-            logger.debug()
+            # logger.debug()
             isThinking = chunk_json["result"]["response"]["isThinking"]
             if prev_thinking_has_inited:
                 prev_thinking = isThinking

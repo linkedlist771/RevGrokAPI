@@ -40,7 +40,7 @@ async def grok_chat(model: str, prompt: str):
 
         # Check if thinking state changed
         if "isThinking" in str(chunk_json):
-            new_thinking_state = chunk_json["isThinking"]
+            new_thinking_state = chunk_json["result"]["response"]["isThinking"]
             logger.debug(f"isThinking: {new_thinking_state}\n new_thinking_state: {new_thinking_state}")
             # If we're transitioning from thinking to not thinking, close the think tag
             if is_thinking and not new_thinking_state and reasoning:

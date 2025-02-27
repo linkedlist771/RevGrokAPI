@@ -31,6 +31,6 @@ def get_default_chat_payload():
         "isPreset": False,
         "sendFinalMetadata": True,
         "customInstructions": "",
-        "deepsearchPreset": "",
+        "deepsearchPreset": "", #     "deepsearchPreset": "default",
         "isReasoning": False,
     }

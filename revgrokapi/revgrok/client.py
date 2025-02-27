@@ -28,13 +28,15 @@ class GrokClient:
         self.user_agent = user_agent if user_agent else get_default_user_agent()
         self.client = httpx.AsyncClient()
 
-    async def chat(self, prompt: str, model: str, reasoning: bool):
+    async def chat(self, prompt: str, model: str, reasoning: bool=False, deepresearch: bool=False):
         default_payload = get_default_chat_payload()
         update_payload = {
             "modelName": model,
             "message": prompt,
             "isReasoning": reasoning,
+            "deepsearchPreset": "default" if deepresearch else "",
         }
+
         default_payload.update(update_payload)
         payload = default_payload
         async with self.client.stream(

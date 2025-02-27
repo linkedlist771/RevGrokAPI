@@ -22,9 +22,11 @@ async def select_cookie_client():
 
 async def grok_chat(model: str, prompt: str):
     grok_client = await select_cookie_client()
-    reasoning = "reasoning" in model.lower()
+    reasoning = "reasoner" in model.lower()
+    deepresearch = "deepresearch" in model.lower() # give me a deep survey about the video generation type model
     response_text = ""
-    async for chunk in grok_client.chat(prompt, model, reasoning):
+
+    async for chunk in grok_client.chat(prompt, model, reasoning, deepresearch):
         yield chunk
         response_text += chunk
     logger.info(f"""{{

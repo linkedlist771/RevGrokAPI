@@ -48,7 +48,7 @@ async def grok_chat(model: str, prompt: str):
         if "messageStepId" in str(chunk_json):
             new_message_id = chunk_json["result"]["response"]["messageStepId"]
 
-            if new_message_id != current_message_id:
+            if new_message_id != current_message_id and chunk:
                 chunk = "\n---\n" + f"> `Step{step_id}`"
                 step_id += 1
 

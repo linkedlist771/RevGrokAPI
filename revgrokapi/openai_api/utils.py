@@ -29,8 +29,8 @@ async def grok_chat(model: str, prompt: str):
     # if "deepresearch" in model.lower():
     model = "grok-3"
     if reasoning:
-        response_text += "<think>"
-        yield "<think>"
+        response_text += "<think>\n"
+        yield "<think>\n"
 
 
 
@@ -44,7 +44,7 @@ async def grok_chat(model: str, prompt: str):
             logger.debug(f"isThinking: {new_thinking_state}\n new_thinking_state: {new_thinking_state}")
             # If we're transitioning from thinking to not thinking, close the think tag
             if is_thinking and not new_thinking_state and reasoning:
-                yield "</think>"
+                yield "</think>\n"
                 # Update thinking state
                 is_thinking = new_thinking_state
         yield chunk

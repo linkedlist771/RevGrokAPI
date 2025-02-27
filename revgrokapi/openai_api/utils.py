@@ -20,6 +20,7 @@ async def select_cookie_client():
     grok_client = GrokClient(cookie.cookie)
     return grok_client
 
+
 async def grok_chat(model: str, prompt: str):
     grok_client = await select_cookie_client()
     reasoning = "reasoner" in model.lower()
@@ -27,9 +28,29 @@ async def grok_chat(model: str, prompt: str):
     response_text = ""
     # if "deepresearch" in model.lower():
     model = "grok-3"
+    if reasoning:
+        yield "<think>"
 
-    async for chunk in grok_client.chat(prompt, model, reasoning, deepresearch):
+    prev_thinking = current_thinking = False
+    prev_thinking_has_inited = False
+
+    async for (chunk, chunk_json) in grok_client.chat(prompt, model, reasoning, deepresearch):
+        if "isThinking" in str(chunk_json):
+            isThinking = chunk_json["isThinking"]
+            if prev_thinking_has_inited:
+                prev_thinking = isThinking
+            else:
+                prev_thinking_has_inited = True
+            current_thinking = isThinking
+
+            # 当previous thinking 为true, 切current_thinking 为false的时候， yield  </think>
+
+        if prev_thinking and (not current_thinking) and reasoning:
+            yield "</think>"
+
         yield chunk
+
+
         response_text += chunk
     logger.info(f"""{{
         "model": "{model}",

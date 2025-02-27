@@ -29,12 +29,8 @@ async def grok_chat(model: str, prompt: str):
     # if "deepresearch" in model.lower():
     model = "grok-3"
     if reasoning:
-        response_text += "<think>\n"
-        yield ""
-        yield ""
-        yield "\n"
-        yield "<think>"
-        yield "\n"
+        response_text += "<think>\n\n"
+        yield "<think>\n\n"
 
 
     is_thinking = None  # Track current thinking state

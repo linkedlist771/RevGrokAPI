@@ -6,8 +6,8 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
-from rev_claude.lifespan import lifespan
-from rev_claude.router import router
+from revgrokapi.lifespan import lifespan
+from revgrokapi.router import router
 
 from revgrokapi.configs import LOG_DIR
 from revgrokapi.middlewares.register_middlewares import register_middleware

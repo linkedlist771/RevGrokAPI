@@ -1,6 +1,7 @@
 from typing import TypeVar, Optional, List, Any, Dict
 from tortoise import Model, fields
 from tortoise.expressions import Q
+from pydantic import BaseModel
 
 ModelType = TypeVar("ModelType", bound=Model)
 

@@ -17,5 +17,7 @@ DATA_DIR = ROOT / "data"
 DB_PATH =  DATA_DIR / "db.sqlite3"
 DB_URL=f"sqlite://{DB_PATH}"
 
+POE_OPENAI_LIKE_API_KEY = "sk-poe-api-dfascvu2"
+
 if __name__ == "__main__":
     print(ROOT)

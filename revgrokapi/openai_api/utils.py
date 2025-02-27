@@ -41,13 +41,14 @@ async def grok_chat(model: str, prompt: str):
     current_message_id = None
 
     is_thinking = None  # Track current thinking state
-
+    step_id = 1
     async for (chunk, chunk_json) in grok_client.chat(prompt, model, reasoning, deepresearch):
         if "messageStepId" in str(chunk_json):
             new_message_id = chunk_json["result"]["response"]["messageStepId"]
 
             if new_message_id != current_message_id:
-                chunk = "\n---\n" + f"`Step{new_message_id}`"
+                chunk = "\n---\n" + f"> `Step{step_id}`"
+                step_id += 1
 
             current_message_id = new_message_id
 

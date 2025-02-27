@@ -2,6 +2,8 @@
 
 import asyncio
 import functools
+import json
+
 from loguru import logger
 from fastapi import Request
 from revgrokapi.models.cookie_models import CookieType, Cookie
@@ -69,7 +71,13 @@ async def grok_chat(model: str, prompt: str):
                 chunk = chunk[:-1] + "\n>"
 
             if "action_input" in chunk:
-                chunk = ""
+                action_json = json.loads(chunk)
+                action = action_json["action"]
+                action_params = ""
+                for k, v in action_json["action_input"].items():
+                    action_params += f"{k}: {v}, "
+                chunk = f"~{action} with {action_params} ~"
+
 
 
         if "modelResponse" in str(chunk_json):

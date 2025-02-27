@@ -80,7 +80,7 @@ async def grok_chat(model: str, prompt: str):
 
 
 
-        if "modelResponse" in str(chunk_json):
+        if "modelResponse" in str(chunk_json) and deepresearch:
 
             chunk = chunk_json.get("result", {}).get("response", {}).get("modelResponse", {})\
             .get("message", "")

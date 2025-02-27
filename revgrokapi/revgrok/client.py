@@ -42,6 +42,8 @@ class GrokClient:
             url=CHAT_URL,
             headers=self.headers,
             json=payload,
+            timeout=30.0,  # 30 seconds timeout
+
         ) as response:
             async for chunk in response.aiter_lines():
                 # yield chunk

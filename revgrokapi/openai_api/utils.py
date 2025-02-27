@@ -2,7 +2,7 @@
 
 import asyncio
 import functools
-
+from loguru import logger
 from fastapi import Request
 from revgrokapi.models.cookie_models import CookieType, Cookie
 from revgrokapi.openai_api.schemas import ChatMessage
@@ -23,8 +23,15 @@ async def select_cookie_client():
 async def grok_chat(model: str, prompt: str):
     grok_client = await select_cookie_client()
     reasoning = "reasoning" in model.lower()
+    response_text = ""
     async for chunk in grok_client.chat(prompt, model, reasoning):
         yield chunk
+        response_text += chunk
+    logger.info(f"""{{
+        "model": "{model}",
+        "prompt": "{prompt}",
+        "response_text": "{response_text}"
+    }}""")
 
 async def extract_messages_and_images(messages: list[ChatMessage]):
     texts = []

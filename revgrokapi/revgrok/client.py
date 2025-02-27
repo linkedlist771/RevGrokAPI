@@ -44,11 +44,11 @@ class GrokClient:
             json=payload,
         ) as response:
             async for chunk in response.aiter_lines():
-                yield chunk
-                # chunk_json = json.loads(chunk)
-                # if "error" in chunk:
-                #     raise RuntimeError(chunk_json.get("error").get("message"))
-                # response = (
-                #     chunk_json.get("result", {}).get("response", {}).get("token", "")
-                # )
-                # yield response
+                # yield chunk
+                chunk_json = json.loads(chunk)
+                if "error" in chunk:
+                    raise RuntimeError(chunk_json.get("error").get("message"))
+                response = (
+                    chunk_json.get("result", {}).get("response", {}).get("token", "")
+                )
+                yield response

@@ -30,6 +30,7 @@ async def grok_chat(model: str, prompt: str):
     model = "grok-3"
     if reasoning:
         response_text += "<think>\n"
+        yield ""
         yield "<think>\n"
 
 

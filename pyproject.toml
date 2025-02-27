@@ -9,6 +9,7 @@ dependencies = [
     "fire>=0.7.0",
     "httpx>=0.28.1",
     "loguru>=0.7.3",
+    "openai>=1.64.0",
     "pytz>=2025.1",
     "tiktoken>=0.9.0",
     "tortoise-orm[asyncpg]>=0.24.1",

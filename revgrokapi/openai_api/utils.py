@@ -58,6 +58,9 @@ async def grok_chat(model: str, prompt: str):
             if chunk.endswith("\n"):
                 chunk = chunk[:-1] + "\n>"
 
+            if "action_input" in chunk:
+                chunk = ""
+
 
         if "modelResponse" in str(chunk_json):
 

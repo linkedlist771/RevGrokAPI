@@ -76,7 +76,7 @@ async def grok_chat(model: str, prompt: str):
                 action_params = ""
                 for k, v in action_json["action_input"].items():
                     action_params += f"{k}: {v}, "
-                chunk = f"~{action} with {action_params} ~"
+                chunk = f"\n***{action} with {action_params}***"
 
 
 

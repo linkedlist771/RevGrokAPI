@@ -14,7 +14,7 @@ def get_default_chat_payload():
         "imageAttachments": [],
         "disableSearch": False,
         "enableImageGeneration": True,
-        "returnImageBytes": False,
+        "returnImageBytes": True,
         "returnRawGrokInXaiRequest": False,
         "enableImageStreaming": True,
         "imageGenerationCount": 2,

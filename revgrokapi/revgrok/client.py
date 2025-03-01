@@ -54,6 +54,7 @@ class GrokClient:
                     chunk_json = json.loads(chunk)
                 except json.JSONDecodeError:
                     logger.debug(chunk)
+                    chunk_json = {}
                     yield chunk, {}
                     # return
                 if "error" in chunk:

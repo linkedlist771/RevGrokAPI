@@ -1,5 +1,5 @@
 import json
-from venv import logger
+from loguru import logger
 
 import httpx
 

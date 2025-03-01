@@ -49,9 +49,13 @@ class GrokClient:
 
         ) as response:
             async for chunk in response.aiter_lines():
-                logger.debug(chunk)
-                # yield parsed_output_and the chunk it self,
-                chunk_json = json.loads(chunk)
+                try:
+                    # yield parsed_output_and the chunk it self,
+                    chunk_json = json.loads(chunk)
+                except json.JSONDecodeError:
+                    logger.debug(chunk)
+                    yield chunk, {}
+                    # return
                 if "error" in chunk:
                     # error_message = chunk_json.get("error").get("message")
                     yield chunk, chunk_json

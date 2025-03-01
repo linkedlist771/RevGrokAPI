@@ -1,10 +1,17 @@
 import httpx
 
+from fake_useragent import UserAgent
+
 
 def get_default_user_agent():
     return "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.3 Safari/605.1.15"
 
+def get_random_user_agent():
+    ua = UserAgent()
 
+    # 随机生成一个User-Agent
+    random_ua = ua.random
+    return random_ua
 def get_default_chat_payload():
     return {
         "temporary": False,

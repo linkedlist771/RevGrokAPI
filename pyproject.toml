@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "fake-useragent>=2.0.3",
     "fastapi>=0.115.8",
     "fire>=0.7.0",
     "httpx>=0.28.1",

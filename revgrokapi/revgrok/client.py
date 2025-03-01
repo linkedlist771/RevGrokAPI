@@ -1,4 +1,5 @@
 import json
+from venv import logger
 
 import httpx
 
@@ -48,6 +49,7 @@ class GrokClient:
 
         ) as response:
             async for chunk in response.aiter_lines():
+                logger.debug(chunk)
                 # yield parsed_output_and the chunk it self,
                 chunk_json = json.loads(chunk)
                 if "error" in chunk:

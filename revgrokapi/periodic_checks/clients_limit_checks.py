@@ -14,9 +14,9 @@ async def _check_grok_clients_limits():
     for cookie in all_cookies:
         grok_client = GrokClient(cookie.cookie)
         default_weights = {
-            "DEFAULT": 0,
-            "REASONING": 0,
-            "DEEPSEARCH": 0
+            "DEFAULT": 1,
+            "REASONING": 1,
+            "DEEPSEARCH": 1
         }
         try:
             rate_limit = await grok_client.get_rate_limit()

@@ -45,7 +45,7 @@ class CookieQueries(CRUDBase):
     category = fields.CharEnumField(enum_type=QueryCategory, max_length=50)
 
     # 查询权重
-    queries_weight = fields.IntField(default=0)
+    queries_weight = fields.IntField(default=1)
 
     class Meta:
         table = "cookie_queries"

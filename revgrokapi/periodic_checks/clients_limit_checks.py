@@ -28,7 +28,6 @@ async def __check_grok_clients_limits():
             for kind, data in rate_limit.items():
                 default_weights[kind] = data["remainingQueries"]
 
-            logger.debug(f"Updating weights for cookie {cookie.id}: {default_weights}")
             await CookieQueries.update_weights(
                 cookie=cookie,
                 weights=default_weights

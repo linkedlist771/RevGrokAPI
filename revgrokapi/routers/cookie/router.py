@@ -207,17 +207,19 @@ async def get_cookie_stats_by_type():
         # 获取该类型的cookie总数
         type_count = await Cookie.get_count(cookie_type=cookie_type)
         
-        # 获取该类型下各模型的可用量
+        # 获取该类型下各模型的可用量（剩余查询数的总和）
         model_counts = {}
         for category in QueryCategory:
-            # 获取该类型和模型下权重大于0的cookie数量
-            cookies_with_weight = await CookieQueries.filter(
+            # 获取该类型和模型下所有cookie的记录
+            all_records = await CookieQueries.filter(
                 cookie_ref__cookie_type=cookie_type,
-                category=category,
-                queries_weight__gt=0
-            ).count()
+                category=category
+            ).all()
             
-            model_counts[category.value] = cookies_with_weight
+            # 计算该类别下所有cookie的权重总和（剩余查询数）
+            total_weight = sum(record.queries_weight for record in all_records)
+            
+            model_counts[category.value] = total_weight
         
         result.append({
             "cookie_type": cookie_type.value,

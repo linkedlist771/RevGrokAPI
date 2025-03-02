@@ -9,7 +9,7 @@ from fastapi import Request
 from revgrokapi.models.cookie_models import CookieType, Cookie
 from revgrokapi.openai_api.schemas import ChatMessage
 from revgrokapi.revgrok.client import GrokClient
-
+from revgrokapi.utils.async_utils import async_retry
 
 
 async def select_cookie_client():
@@ -22,7 +22,7 @@ async def select_cookie_client():
     grok_client = GrokClient(cookie.cookie)
     return grok_client
 
-
+@async_retry(retries=3, delay=1)
 async def grok_chat(model: str, prompt: str):
     grok_client = await select_cookie_client()
     reasoning = "reasoner" in model.lower()
@@ -39,6 +39,8 @@ async def grok_chat(model: str, prompt: str):
     is_thinking = None  # Track current thinking state
     step_id = 1
     async for (chunk, chunk_json) in grok_client.chat(prompt, model, reasoning, deepresearch):
+        if "Just a moment" in chunk:
+            raise RuntimeError("CF error, retryiing....")
         if "messageStepId" in str(chunk_json):
             new_message_id = chunk_json["result"]["response"]["messageStepId"]
 

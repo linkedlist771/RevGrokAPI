@@ -120,6 +120,7 @@ class GrokClient:
             # curl_cffi 返回的是字节，需要解码
             async for chunk_bytes in response.aiter_lines():
                 chunk = chunk_bytes.decode('utf-8')
+                logger.debug(chunk)
                 try:
                     # yield parsed_output_and the chunk it self,
                     chunk_json = json.loads(chunk)

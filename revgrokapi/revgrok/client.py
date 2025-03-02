@@ -150,5 +150,5 @@ class GrokClient:
             "modelName": "grok-3",
         }
         rate_limit_response = await self.client.post(url, headers=self.headers, json=payload)
-        rate_limit_json = await rate_limit_response.json()
+        rate_limit_json = rate_limit_response.json()
         return rate_limit_json

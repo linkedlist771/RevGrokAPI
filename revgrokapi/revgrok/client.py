@@ -70,7 +70,6 @@ from loguru import logger
 
 from curl_cffi.requests import AsyncSession, BrowserType
 
-from demos.request_openai import response
 from .configs import CHAT_URL, RATE_LIMIT_URL
 from .utils import get_default_chat_payload, get_default_user_agent
 

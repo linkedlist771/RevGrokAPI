@@ -61,8 +61,8 @@ async def __check_grok_clients_limits():
 
             return f"Cookie {cookie.id}: {default_weights}"
         except Exception as e:
-            error_msg = f"Error checking cookie {cookie.id}: {e}"
-            logger.error(error_msg)
+            from traceback import format_exc
+            logger.error(f"Error checking rate limit for cookie {cookie.id}: {format_exc()}")
             return error_msg
 
     async def process_batch(batch):

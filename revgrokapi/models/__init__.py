@@ -1,2 +1,2 @@
 from revgrokapi.models.base import CRUDBase
-from revgrokapi.models.cookie_models import Cookie, CookieType, CookieQueries
+from revgrokapi.models.cookie_models import Cookie, CookieQueries, CookieType

@@ -3,9 +3,9 @@ from datetime import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
-
 from revgrokapi.configs import GROK_CLIENT_LIMIT_CHECKS_INTERVAL_MINUTES
-from revgrokapi.periodic_checks.clients_limit_checks import check_grok_clients_limits
+from revgrokapi.periodic_checks.clients_limit_checks import \
+    check_grok_clients_limits
 
 limit_check_scheduler = AsyncIOScheduler()
 

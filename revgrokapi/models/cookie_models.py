@@ -4,10 +4,12 @@ revgrokapi/models/cookie_models.py
 This file defines the tortoise based models for the cookie to restore.
 """
 from enum import Enum
-from typing import Dict, Any
-from tortoise import fields
+from typing import Any, Dict
+
 import numpy as np
 from loguru import logger
+from tortoise import fields
+
 from revgrokapi.models.base import CRUDBase
 
 
@@ -38,7 +40,7 @@ class Cookie(CRUDBase):
             "cookie_type": self.cookie_type.value if self.cookie_type else None,
             "account": self.account,
             "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
         return model_dict
 
@@ -96,10 +98,10 @@ class CookieQueries(CRUDBase):
             更新的CookieQueries记录数量
         """
         updated_count = 0
-        
+
         # 先检查当前的权重
         current_weights = await cls.get_weights(cookie)
-        
+
         for category_name, weight in weights.items():
             try:
                 category = QueryCategory(category_name)
@@ -108,10 +110,10 @@ class CookieQueries(CRUDBase):
             except ValueError:
                 # 如果类别名称无效，跳过
                 continue
-                
+
         # 检查更新后的权重
         updated_weights = await cls.get_weights(cookie)
-        
+
         return updated_count
 
     @classmethod
@@ -170,8 +172,7 @@ class CookieQueries(CRUDBase):
 
         # 获取指定类别下所有有权重的记录
         query_records = await cls.filter(
-            category=category,
-            queries_weight__gt=0  # 确保只选择权重大于0的记录
+            category=category, queries_weight__gt=0  # 确保只选择权重大于0的记录
         ).prefetch_related("cookie_ref")
 
         if not query_records:
@@ -191,4 +192,4 @@ class CookieQueries(CRUDBase):
         logger.debug(f"Selected cookie: \n{selected_cookie_info}")
         logger.debug(f"Selected weight: {weights[selected_index]}")
 
-        return cookies[selected_index] # Cookie 返回的是这个类型的。
+        return cookies[selected_index]  # Cookie 返回的是这个类型的。

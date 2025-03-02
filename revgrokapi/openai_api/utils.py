@@ -7,7 +7,8 @@ import json
 from fastapi import Request
 from loguru import logger
 
-from revgrokapi.models.cookie_models import Cookie, CookieType, QueryCategory, CookieQueries
+from revgrokapi.models.cookie_models import (Cookie, CookieQueries, CookieType,
+                                             QueryCategory)
 from revgrokapi.openai_api.schemas import ChatMessage
 from revgrokapi.revgrok.client import GrokClient
 from revgrokapi.utils.async_utils import async_retry

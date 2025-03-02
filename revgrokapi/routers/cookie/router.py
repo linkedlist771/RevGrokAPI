@@ -6,8 +6,10 @@ from pydantic import BaseModel, Field
 from tortoise import Model, fields
 from tortoise.expressions import Q
 
-from revgrokapi.models.cookie_models import Cookie, CookieType, CookieQueries, QueryCategory
-from revgrokapi.periodic_checks.clients_limit_checks import __check_grok_clients_limits
+from revgrokapi.models.cookie_models import (Cookie, CookieQueries, CookieType,
+                                             QueryCategory)
+from revgrokapi.periodic_checks.clients_limit_checks import \
+    __check_grok_clients_limits
 
 
 # Pydantic schemas for API request/response models
@@ -78,31 +80,31 @@ async def get_all_cookies_with_queries():
     # 获取所有cookie
     all_cookies = await Cookie.get_multi()
     result = []
-    
+
     for cookie in all_cookies:
         # 获取该cookie的所有查询类别权重
         query_records = await CookieQueries.filter(cookie_ref=cookie).all()
-        
+
         # 将查询类别权重转换为字典
         queries = {}
         for category in QueryCategory:
             # 默认值为0
             queries[category.value] = 0
-            
+
         # 更新实际值
         for record in query_records:
             queries[record.category.value] = record.queries_weight
-        
+
         # 构建响应对象
         cookie_data = {
             "id": cookie.id,
             "account": cookie.account,
             "cookie_type": cookie.cookie_type.value,
-            "queries": queries
+            "queries": queries,
         }
-        
+
         result.append(cookie_data)
-    
+
     return result
 
 
@@ -169,6 +171,7 @@ async def delete_cookie(cookie_id: int):
             detail=f"Cookie with ID {cookie_id} not found",
         )
 
+
 @router.get("/stats/refresh")
 async def get_refreshed_cookie_stats():
     await __check_grok_clients_limits()
@@ -182,23 +185,20 @@ async def get_total_cookie_stats():
     """
     # 获取所有cookie的总数
     total_count = await Cookie.get_count()
-    
+
     # 获取各模型的可用量（剩余查询数的总和）
     model_counts = {}
-    
+
     for category in QueryCategory:
         # 获取该模型下所有cookie的记录
         all_records = await CookieQueries.filter(category=category).all()
-        
+
         # 计算该类别下所有cookie的权重总和（剩余查询数）
         total_weight = sum(record.queries_weight for record in all_records)
-        
+
         model_counts[category.value] = total_weight
-    
-    return {
-        "total_count": total_count,
-        "model_counts": model_counts
-    }
+
+    return {"total_count": total_count, "model_counts": model_counts}
 
 
 @router.get("/stats/by-type", response_model=List[CookieTypeModelCountResponse])
@@ -207,30 +207,31 @@ async def get_cookie_stats_by_type():
     获取按cookie类型分组的各模型可用量
     """
     result = []
-    
+
     # 遍历所有cookie类型
     for cookie_type in CookieType:
         # 获取该类型的cookie总数
         type_count = await Cookie.get_count(cookie_type=cookie_type)
-        
+
         # 获取该类型下各模型的可用量（剩余查询数的总和）
         model_counts = {}
         for category in QueryCategory:
             # 获取该类型和模型下所有cookie的记录
             all_records = await CookieQueries.filter(
-                cookie_ref__cookie_type=cookie_type,
-                category=category
+                cookie_ref__cookie_type=cookie_type, category=category
             ).all()
-            
+
             # 计算该类别下所有cookie的权重总和（剩余查询数）
             total_weight = sum(record.queries_weight for record in all_records)
-            
+
             model_counts[category.value] = total_weight
-        
-        result.append({
-            "cookie_type": cookie_type.value,
-            "total_count": type_count,
-            "model_counts": model_counts
-        })
-    
+
+        result.append(
+            {
+                "cookie_type": cookie_type.value,
+                "total_count": type_count,
+                "model_counts": model_counts,
+            }
+        )
+
     return result

@@ -9,7 +9,6 @@ from revgrokapi.models.cookie_models import CookieQueries
 from revgrokapi.revgrok import GrokClient
 
 
-
 async def __check_grok_clients_limits():
     start_time = time.perf_counter()
     all_cookies = await Cookie.get_multi()
@@ -18,26 +17,22 @@ async def __check_grok_clients_limits():
     async def check_cookie(cookie):
         try:
             grok_client = GrokClient(cookie.cookie)
-            default_weights = {
-                "DEFAULT": 0,
-                "REASONING": 0,
-                "DEEPSEARCH": 0
-            }
+            default_weights = {"DEFAULT": 0, "REASONING": 0, "DEEPSEARCH": 0}
             rate_limit = await grok_client.get_rate_limit()
 
             for kind, data in rate_limit.items():
                 default_weights[kind] = data["remainingQueries"]
 
-            await CookieQueries.update_weights(
-                cookie=cookie,
-                weights=default_weights
-            )
+            await CookieQueries.update_weights(cookie=cookie, weights=default_weights)
             # logger.info(f"Cookie {cookie.id}: {default_weights}")
 
             return f"Cookie {cookie.id}: {default_weights}"
         except Exception as e:
             from traceback import format_exc
-            logger.error(f"Error checking rate limit for cookie {cookie.id}: {format_exc()}")
+
+            logger.error(
+                f"Error checking rate limit for cookie {cookie.id}: {format_exc()}"
+            )
             return e
 
     async def process_batch(batch):
@@ -48,10 +43,8 @@ async def __check_grok_clients_limits():
     total_batches = (len(all_cookies) + batch_size - 1) // batch_size
 
     for i in range(0, len(all_cookies), batch_size):
-        batch = all_cookies[i: i + batch_size]
-        logger.info(
-            f"Processing batch {i // batch_size + 1} of {total_batches}"
-        )
+        batch = all_cookies[i : i + batch_size]
+        logger.info(f"Processing batch {i // batch_size + 1} of {total_batches}")
         batch_results = await process_batch(batch)
         results.extend(batch_results)
         if i + batch_size < len(all_cookies):

@@ -136,18 +136,38 @@ async def get_total_cookie_stats():
     
     # 获取各模型的可用量
     model_counts = {}
+    actual_weights = {}  # 添加一个字典来存储实际的权重值
+    
     for category in QueryCategory:
         # 获取该模型下权重大于0的cookie数量
         cookies_with_weight = await CookieQueries.filter(
             category=category,
             queries_weight__gt=0
         ).count()
+        
+        # 添加详细日志，查看每个类别的cookie数量和权重
+        all_records = await CookieQueries.filter(category=category).all()
+        weights_list = []
+        for record in all_records:
+            cookie = await record.cookie_ref
+            weights_list.append(record.queries_weight)
+            print(f"Debug - Category {category}: Cookie {cookie.id} has weight {record.queries_weight}")
+        
+        print(f"Debug - Category {category}: All weights: {weights_list}")
         model_counts[category.value] = cookies_with_weight
+        actual_weights[category.value] = weights_list  # 存储实际的权重值
     
-    return {
+    print(f"Debug - Total stats: {total_count} cookies, model counts: {model_counts}")
+    print(f"Debug - Actual weights: {actual_weights}")
+    
+    # 返回一个包含实际权重的响应，用于调试
+    response = {
         "total_count": total_count,
-        "model_counts": model_counts
+        "model_counts": model_counts,
+        "actual_weights": actual_weights  # 这个字段不会在响应中显示，因为它不在响应模型中
     }
+    
+    return response
 
 
 @router.get("/stats/by-type", response_model=List[CookieTypeModelCountResponse])

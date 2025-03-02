@@ -57,7 +57,7 @@ class CookieQueries(CRUDBase):
     category = fields.CharEnumField(enum_type=QueryCategory, max_length=50)
 
     # 查询权重
-    queries_weight = fields.IntField(default=1)
+    queries_weight = fields.IntField(default=0)
 
     class Meta:
         table = "cookie_queries"
@@ -71,6 +71,7 @@ class CookieQueries(CRUDBase):
         """获取或创建指定cookie和类别的权重记录"""
         query_record = await cls.get_or_none(cookie_ref=cookie, category=category)
         if not query_record:
+            logger.debug(f"Creating new record for cookie {cookie.id}, category {category} with default weight {default_weight}")
             query_record = await cls.create_item(
                 cookie_ref=cookie, category=category, queries_weight=default_weight
             )
@@ -80,8 +81,10 @@ class CookieQueries(CRUDBase):
     async def update_weight(cls, cookie: Cookie, category: QueryCategory, weight: int):
         """更新指定cookie和类别的权重值"""
         query_record = await cls.get_or_create(cookie, category)
+        logger.debug(f"Before update: cookie {cookie.id}, category {category}, weight {query_record.queries_weight}")
         query_record.queries_weight = weight
         await query_record.save()
+        logger.debug(f"After update: cookie {cookie.id}, category {category}, weight {query_record.queries_weight}")
         return query_record
 
     @classmethod
@@ -96,15 +99,27 @@ class CookieQueries(CRUDBase):
             更新的CookieQueries记录数量
         """
         updated_count = 0
+        logger.debug(f"Starting update_weights for cookie {cookie.id} with weights: {weights}")
+        
+        # 先检查当前的权重
+        current_weights = await cls.get_weights(cookie)
+        logger.debug(f"Current weights for cookie {cookie.id}: {current_weights}")
+        
         for category_name, weight in weights.items():
             try:
                 category = QueryCategory(category_name)
+                logger.debug(f"Updating weight for cookie {cookie.id}, category {category_name}: {weight}")
                 await cls.update_weight(cookie, category, weight)
                 updated_count += 1
             except ValueError:
                 # 如果类别名称无效，跳过
                 logger.error(f"Invalid category name: {category_name}")
                 continue
+                
+        # 检查更新后的权重
+        updated_weights = await cls.get_weights(cookie)
+        logger.debug(f"Updated weights for cookie {cookie.id}: {updated_weights}")
+        
         return updated_count
 
     @classmethod
@@ -120,8 +135,11 @@ class CookieQueries(CRUDBase):
         返回:
             类别权重字典，如 {"DEFAULT": 80, "REASONING": 50, "DEEPSEARCH": 30}
         """
+        logger.debug(f"Getting weights for cookie {cookie.id}")
         query_records = await cls.filter(cookie_ref=cookie)
-        return {record.category: record.queries_weight for record in query_records}
+        result = {record.category: record.queries_weight for record in query_records}
+        logger.debug(f"Retrieved weights for cookie {cookie.id}: {result}")
+        return result
 
     @classmethod
     async def get_cookies_by_weight(

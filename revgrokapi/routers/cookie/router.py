@@ -60,7 +60,7 @@ class CookieQueryValuesResponse(BaseModel):
 router = APIRouter()
 
 
-@router.post("/", response_model=CookieResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=List[CookieResponse], status_code=status.HTTP_201_CREATED)
 async def create_cookie(cookie_in: CookieCreateRequest):
     try:
         cookie = await Cookie.create_item(**cookie_in.model_dump())
@@ -70,6 +70,44 @@ async def create_cookie(cookie_in: CookieCreateRequest):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Could not create cookie: {str(e)}",
         )
+
+
+
+@router.post("/batch_upload", response_model=CookieResponse, status_code=status.HTTP_201_CREATED)
+async def create_cookie(cookie_in: CookieCreateRequest):
+    cookie_str = cookie_in.cookie
+    cookie_str = cookie_str.strip()
+    cookie_strs = cookie_str.split("\n")
+    cookies = []
+    accounts = []
+    types = [cookie_in.cookie_type] * len(cookie_strs)
+
+    for _cookie_str in cookie_strs:
+        account, password, raw_cookie = _cookie_str.split("----")
+        cookie = f"sso={raw_cookie}"
+        cookies.append(cookie)
+        accounts.append(account)
+    response = []
+    for cookie, account, cookie_type in zip(cookies, accounts, types):
+        try:
+            cookie = await Cookie.create_item(cookie=cookie, cookie_type=cookie_type, account=account)
+            response.append(cookie)
+        except Exception as e:
+            # raise HTTPException(
+            #     status_code=status.HTTP_400_BAD_REQUEST,
+            #     detail=f"Could not create cookie: {str(e)}",
+            # )
+            pass
+    return response
+
+    # try:
+    #     cookie = await Cookie.create_item(**cookie_in.model_dump())
+    #     return cookie
+    # except Exception as e:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_400_BAD_REQUEST,
+    #         detail=f"Could not create cookie: {str(e)}",
+    #     )
 
 
 @router.get("/all-with-queries", response_model=List[CookieQueryValuesResponse])

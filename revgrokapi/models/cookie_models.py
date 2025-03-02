@@ -4,7 +4,7 @@ revgrokapi/models/cookie_models.py
 This file defines the tortoise based models for the cookie to restore.
 """
 from enum import Enum
-from typing import Dict
+from typing import Dict, Any
 from tortoise import fields
 import numpy as np
 from loguru import logger
@@ -29,6 +29,18 @@ class Cookie(CRUDBase):
     #
     # # 查询指定类型的 cookie
     # plus_cookies = await Cookie.get_multi(cookie_type=CookieType.PLUS)
+
+    async def to_dict(self) -> Dict[str, Any]:
+        """Convert the model instance to a dictionary, similar to pydantic's model_dump."""
+        model_dict = {
+            "id": self.id,
+            "cookie": self.cookie,
+            "cookie_type": self.cookie_type.value if self.cookie_type else None,
+            "account": self.account,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
+        }
+        return model_dict
 
 
 class QueryCategory(str, Enum):
@@ -168,7 +180,7 @@ class CookieQueries(CRUDBase):
 
         # 使用numpy的random.choice基于权重进行采样
         selected_index = np.random.choice(len(cookies), p=weights)
-        logger.debug(f"Selected index: {selected_index}")
-        logger.debug(f"Selected cookie: {cookies[selected_index]}")
+        selected_cookie_info = await cookies[selected_index].to_dict()
+        logger.debug(f"Selected cookie: \n{selected_cookie_info}")
 
         return cookies[selected_index] # Cookie 返回的是这个类型的。

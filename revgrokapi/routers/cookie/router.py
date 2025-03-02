@@ -7,6 +7,7 @@ from tortoise import Model, fields
 from tortoise.expressions import Q
 
 from revgrokapi.models.cookie_models import Cookie, CookieType, CookieQueries, QueryCategory
+from revgrokapi.periodic_checks.clients_limit_checks import __check_grok_clients_limits
 
 
 # Pydantic schemas for API request/response models
@@ -167,6 +168,11 @@ async def delete_cookie(cookie_id: int):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Cookie with ID {cookie_id} not found",
         )
+
+@router.get("/stats/refreshed")
+async def get_refreshed_cookie_stats():
+    await __check_grok_clients_limits()
+    return {"message": "Cookie stats refreshed"}
 
 
 @router.get("/stats/total", response_model=CookieTotalCountResponse)

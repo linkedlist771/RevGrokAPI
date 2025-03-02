@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional, TypeVar
+from loguru import logger
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
@@ -97,7 +98,8 @@ async def create_cookie(cookie_in: CookieCreateRequest):
             #     status_code=status.HTTP_400_BAD_REQUEST,
             #     detail=f"Could not create cookie: {str(e)}",
             # )
-            pass
+            from traceback import format_exc
+            logger.error(f"Error creating cookie: {format_exc()}")
     return response
 
     # try:

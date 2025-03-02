@@ -75,13 +75,13 @@ async def create_cookie(cookie_in: CookieCreateRequest):
 
 
 @router.post("/batch_upload", response_model=CookieResponse, status_code=status.HTTP_201_CREATED)
-async def create_cookie(cookie_in: CookieCreateRequest):
-    cookie_str = cookie_in.cookie
+async def create_cookie(cookie: str, cookie_type: CookieType, account: str):
+    cookie_str = cookie
     cookie_str = cookie_str.strip()
     cookie_strs = cookie_str.split("\n")
     cookies = []
     accounts = []
-    types = [cookie_in.cookie_type] * len(cookie_strs)
+    types = [cookie_type] * len(cookie_strs)
 
     for _cookie_str in cookie_strs:
         account, password, raw_cookie = _cookie_str.split("----")

@@ -69,6 +69,42 @@ async def create_cookie(cookie_in: CookieCreateRequest):
         )
 
 
+@router.get("/all-with-queries", response_model=List[CookieQueryValuesResponse])
+async def get_all_cookies_with_queries():
+    """
+    获取所有cookie及其三个查询类别的权重值
+    """
+    # 获取所有cookie
+    all_cookies = await Cookie.get_multi()
+    result = []
+    
+    for cookie in all_cookies:
+        # 获取该cookie的所有查询类别权重
+        query_records = await CookieQueries.filter(cookie_ref=cookie).all()
+        
+        # 将查询类别权重转换为字典
+        queries = {}
+        for category in QueryCategory:
+            # 默认值为0
+            queries[category.value] = 0
+            
+        # 更新实际值
+        for record in query_records:
+            queries[record.category.value] = record.queries_weight
+        
+        # 构建响应对象
+        cookie_data = {
+            "id": cookie.id,
+            "account": cookie.account,
+            "cookie_type": cookie.cookie_type.value,
+            "queries": queries
+        }
+        
+        result.append(cookie_data)
+    
+    return result
+
+
 @router.get("/{cookie_id}", response_model=CookieResponse)
 async def get_cookie(cookie_id: int):
     cookie = await Cookie.get_by_id(cookie_id)
@@ -141,17 +177,17 @@ async def get_total_cookie_stats():
     # 获取所有cookie的总数
     total_count = await Cookie.get_count()
     
-    # 获取各模型的可用量
+    # 获取各模型的可用量（剩余查询数的总和）
     model_counts = {}
     
     for category in QueryCategory:
-        # 获取该模型下权重大于0的cookie数量
-        cookies_with_weight = await CookieQueries.filter(
-            category=category,
-            queries_weight__gt=0
-        ).count()
+        # 获取该模型下所有cookie的记录
+        all_records = await CookieQueries.filter(category=category).all()
         
-        model_counts[category.value] = cookies_with_weight
+        # 计算该类别下所有cookie的权重总和（剩余查询数）
+        total_weight = sum(record.queries_weight for record in all_records)
+        
+        model_counts[category.value] = total_weight
     
     return {
         "total_count": total_count,
@@ -188,41 +224,5 @@ async def get_cookie_stats_by_type():
             "total_count": type_count,
             "model_counts": model_counts
         })
-    
-    return result
-
-
-@router.get("/all-with-queries", response_model=List[CookieQueryValuesResponse])
-async def get_all_cookies_with_queries():
-    """
-    获取所有cookie及其三个查询类别的权重值
-    """
-    # 获取所有cookie
-    all_cookies = await Cookie.get_multi()
-    result = []
-    
-    for cookie in all_cookies:
-        # 获取该cookie的所有查询类别权重
-        query_records = await CookieQueries.filter(cookie_ref=cookie).all()
-        
-        # 将查询类别权重转换为字典
-        queries = {}
-        for category in QueryCategory:
-            # 默认值为0
-            queries[category.value] = 0
-            
-        # 更新实际值
-        for record in query_records:
-            queries[record.category.value] = record.queries_weight
-        
-        # 构建响应对象
-        cookie_data = {
-            "id": cookie.id,
-            "account": cookie.account,
-            "cookie_type": cookie.cookie_type.value,
-            "queries": queries
-        }
-        
-        result.append(cookie_data)
     
     return result

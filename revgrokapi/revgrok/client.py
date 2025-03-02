@@ -70,7 +70,8 @@ from loguru import logger
 
 from curl_cffi.requests import AsyncSession, BrowserType
 
-from .configs import CHAT_URL
+from demos.request_openai import response
+from .configs import CHAT_URL, RATE_LIMIT_URL
 from .utils import get_default_chat_payload, get_default_user_agent
 
 
@@ -139,3 +140,16 @@ class GrokClient:
                     chunk_json.get("result", {}).get("response", {}).get("token", "")
                 )
                 yield response, chunk_json
+
+    async def get_rate_limit(self):
+        url = RATE_LIMIT_URL
+        #    DEFAULT: '标准',
+        #         REASONING: '思考',
+        #         DEEPSEARCH: '深度'
+        payload = {
+            "requestKind": "DEFAULT",
+            "modelName": "grok-3",
+        }
+        rate_limit_response = await self.client.post(url, headers=self.headers, json=payload)
+        rate_limit_json = await rate_limit_response.json()
+        return rate_limit_json

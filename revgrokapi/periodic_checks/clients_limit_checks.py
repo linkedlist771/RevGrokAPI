@@ -1,15 +1,13 @@
 import asyncio
 import time
+import multiprocessing
+import sys
 
 from loguru import logger
 from tqdm.asyncio import tqdm
-from asyncio import to_thread
 from revgrokapi.models import Cookie
 from revgrokapi.models.cookie_models import CookieQueries
 from revgrokapi.revgrok import GrokClient
-from concurrent.futures import ProcessPoolExecutor
-
-
 
 
 async def __check_grok_clients_limits():
@@ -42,11 +40,11 @@ async def __check_grok_clients_limits():
         return await asyncio.gather(*[check_cookie(cookie) for cookie in batch])
 
     results = []
-    batch_size = 10 # 每批处理的客户端数量
+    batch_size = 10  # 每批处理的客户端数量
     total_batches = (len(all_cookies) + batch_size - 1) // batch_size
 
     for i in range(0, len(all_cookies), batch_size):
-        batch = all_cookies[i : i + batch_size]
+        batch = all_cookies[i: i + batch_size]
         logger.info(f"Processing batch {i // batch_size + 1} of {total_batches}")
         batch_results = await process_batch(batch)
         results.extend(batch_results)
@@ -60,19 +58,16 @@ async def __check_grok_clients_limits():
         logger.info(result)
 
 
+# Define this function at the module level, not inside another function
+def run_grok_check():
+    asyncio.run(__check_grok_clients_limits())
+
+
 async def check_grok_clients_limits():
-    # Create a process pool executor
-    loop = asyncio.get_running_loop()
+    # Use multiprocessing directly instead of ProcessPoolExecutor
+    process = multiprocessing.Process(target=run_grok_check)
+    process.daemon = True
+    process.start()
 
-    # Define a wrapper function
-    def process_wrapper():
-        asyncio.run(__check_grok_clients_limits())
-
-    # Run the function in a process pool without waiting
-    with ProcessPoolExecutor(max_workers=1) as executor:
-        loop.run_in_executor(executor, process_wrapper)
     logger.info("Grok clients check started in background process")
-
     return {"message": "Grok clients check started in background process"}
-
-

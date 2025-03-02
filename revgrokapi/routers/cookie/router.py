@@ -84,6 +84,7 @@ async def create_cookie(cookie: str, cookie_type: CookieType, account: str):
     types = [cookie_type] * len(cookie_strs)
 
     for _cookie_str in cookie_strs:
+        logger.debug(_cookie_str)
         account, password, raw_cookie = _cookie_str.split("----")
         cookie = f"sso={raw_cookie}"
         cookies.append(cookie)

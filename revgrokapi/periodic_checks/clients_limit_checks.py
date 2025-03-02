@@ -32,7 +32,7 @@ async def __check_grok_clients_limits():
                 cookie=cookie,
                 weights=default_weights
             )
-            logger.info(f"Cookie {cookie.id}: {default_weights}")
+            # logger.info(f"Cookie {cookie.id}: {default_weights}")
 
             return f"Cookie {cookie.id}: {default_weights}"
         except Exception as e:

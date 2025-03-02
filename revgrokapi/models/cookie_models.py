@@ -103,6 +103,7 @@ class CookieQueries(CRUDBase):
                 updated_count += 1
             except ValueError:
                 # 如果类别名称无效，跳过
+                logger.error(f"Invalid category name: {category_name}")
                 continue
         return updated_count
 

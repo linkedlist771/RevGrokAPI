@@ -67,7 +67,7 @@
 #                 yield response, chunk_json
 import json
 from loguru import logger
-
+import asyncio
 from curl_cffi.requests import AsyncSession, BrowserType
 
 from .configs import CHAT_URL, RATE_LIMIT_URL
@@ -140,15 +140,26 @@ class GrokClient:
                 )
                 yield response, chunk_json
 
-    async def get_rate_limit(self):
+    async def _get_single_rate_limit(self, request_kind, model_name="grok-3"):
+        """Helper method to fetch rate limit for a specific request kind"""
         url = RATE_LIMIT_URL
-        #    DEFAULT: '标准',
-        #         REASONING: '思考',
-        #         DEEPSEARCH: '深度'
         payload = {
-            "requestKind": "DEFAULT",
-            "modelName": "grok-3",
+            "requestKind": request_kind,
+            "modelName": model_name,
         }
         rate_limit_response = await self.client.post(url, headers=self.headers, json=payload)
-        rate_limit_json = rate_limit_response.json()
-        return rate_limit_json
+        return request_kind, rate_limit_response.json()
+
+    async def get_rate_limit(self):
+        """Fetch rate limits for all model types concurrently using asyncio.gather"""
+        model_types = ["DEFAULT", "REASONING", "DEEPSEARCH"]
+
+        # Use asyncio.gather to run all requests concurrently
+        results = await asyncio.gather(
+            *[self._get_single_rate_limit(kind) for kind in model_types]
+        )
+
+        # Format results into a dictionary {request_kind: rate_limit_data}
+        rate_limits = {kind: data for kind, data in results}
+
+        return rate_limits

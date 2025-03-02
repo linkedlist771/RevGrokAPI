@@ -46,6 +46,13 @@ class CookieTypeModelCountResponse(BaseModel):
     model_counts: Dict[str, int]
 
 
+class CookieQueryValuesResponse(BaseModel):
+    id: int
+    account: str
+    cookie_type: str
+    queries: Dict[str, float]
+
+
 # FastAPI router for RESTful endpoints
 router = APIRouter()
 
@@ -136,7 +143,6 @@ async def get_total_cookie_stats():
     
     # 获取各模型的可用量
     model_counts = {}
-    actual_weights = {}  # 添加一个字典来存储实际的权重值
     
     for category in QueryCategory:
         # 获取该模型下权重大于0的cookie数量
@@ -145,29 +151,12 @@ async def get_total_cookie_stats():
             queries_weight__gt=0
         ).count()
         
-        # 添加详细日志，查看每个类别的cookie数量和权重
-        all_records = await CookieQueries.filter(category=category).all()
-        weights_list = []
-        for record in all_records:
-            cookie = await record.cookie_ref
-            weights_list.append(record.queries_weight)
-            print(f"Debug - Category {category}: Cookie {cookie.id} has weight {record.queries_weight}")
-        
-        print(f"Debug - Category {category}: All weights: {weights_list}")
         model_counts[category.value] = cookies_with_weight
-        actual_weights[category.value] = weights_list  # 存储实际的权重值
     
-    print(f"Debug - Total stats: {total_count} cookies, model counts: {model_counts}")
-    print(f"Debug - Actual weights: {actual_weights}")
-    
-    # 返回一个包含实际权重的响应，用于调试
-    response = {
+    return {
         "total_count": total_count,
-        "model_counts": model_counts,
-        "actual_weights": actual_weights  # 这个字段不会在响应中显示，因为它不在响应模型中
+        "model_counts": model_counts
     }
-    
-    return response
 
 
 @router.get("/stats/by-type", response_model=List[CookieTypeModelCountResponse])
@@ -191,6 +180,7 @@ async def get_cookie_stats_by_type():
                 category=category,
                 queries_weight__gt=0
             ).count()
+            
             model_counts[category.value] = cookies_with_weight
         
         result.append({
@@ -198,5 +188,41 @@ async def get_cookie_stats_by_type():
             "total_count": type_count,
             "model_counts": model_counts
         })
+    
+    return result
+
+
+@router.get("/all-with-queries", response_model=List[CookieQueryValuesResponse])
+async def get_all_cookies_with_queries():
+    """
+    获取所有cookie及其三个查询类别的权重值
+    """
+    # 获取所有cookie
+    all_cookies = await Cookie.get_multi()
+    result = []
+    
+    for cookie in all_cookies:
+        # 获取该cookie的所有查询类别权重
+        query_records = await CookieQueries.filter(cookie_ref=cookie).all()
+        
+        # 将查询类别权重转换为字典
+        queries = {}
+        for category in QueryCategory:
+            # 默认值为0
+            queries[category.value] = 0
+            
+        # 更新实际值
+        for record in query_records:
+            queries[record.category.value] = record.queries_weight
+        
+        # 构建响应对象
+        cookie_data = {
+            "id": cookie.id,
+            "account": cookie.account,
+            "cookie_type": cookie.cookie_type.value,
+            "queries": queries
+        }
+        
+        result.append(cookie_data)
     
     return result

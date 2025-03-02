@@ -1,11 +1,12 @@
-from typing import TypeVar, Optional, List, Any, Dict
+from datetime import datetime
+from typing import Any, Dict, List, Optional, TypeVar
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel, Field
 from tortoise import Model, fields
 from tortoise.expressions import Q
-from fastapi import APIRouter, HTTPException, Depends, Query, status
-from pydantic import BaseModel, Field
-from datetime import datetime
 
-from revgrokapi.models.cookie_models import CookieType, Cookie
+from revgrokapi.models.cookie_models import Cookie, CookieType
 
 
 # Pydantic schemas for API request/response models
@@ -46,7 +47,7 @@ async def create_cookie(cookie_in: CookieCreateRequest):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Could not create cookie: {str(e)}"
+            detail=f"Could not create cookie: {str(e)}",
         )
 
 
@@ -56,17 +57,17 @@ async def get_cookie(cookie_id: int):
     if not cookie:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Cookie with ID {cookie_id} not found"
+            detail=f"Cookie with ID {cookie_id} not found",
         )
     return cookie
 
 
 @router.get("/", response_model=List[CookieResponse])
 async def list_cookies(
-        skip: int = 0,
-        limit: int = 100,
-        cookie_type: Optional[CookieType] = None,
-        search: Optional[str] = None
+    skip: int = 0,
+    limit: int = 100,
+    cookie_type: Optional[CookieType] = None,
+    search: Optional[str] = None,
 ):
     filters = {}
     if cookie_type:
@@ -77,7 +78,7 @@ async def list_cookies(
             search_fields=["cookie", "account"],
             search_term=search,
             skip=skip,
-            limit=limit
+            limit=limit,
         )
     else:
         cookies = await Cookie.get_multi(skip=skip, limit=limit, **filters)
@@ -91,14 +92,13 @@ async def update_cookie(cookie_id: int, cookie_in: CookieUpdateRequest):
     if not cookie:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Cookie with ID {cookie_id} not found"
+            detail=f"Cookie with ID {cookie_id} not found",
         )
 
     update_data = {k: v for k, v in cookie_in.dict().items() if v is not None}
     if not update_data:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No valid fields to update"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="No valid fields to update"
         )
 
     updated_cookie = await cookie.update_item(**update_data)
@@ -111,5 +111,5 @@ async def delete_cookie(cookie_id: int):
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Cookie with ID {cookie_id} not found"
+            detail=f"Cookie with ID {cookie_id} not found",
         )

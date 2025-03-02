@@ -6,11 +6,11 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
-from revgrokapi.lifespan import lifespan
-from revgrokapi.router import router
 
 from revgrokapi.configs import LOG_DIR
+from revgrokapi.lifespan import lifespan
 from revgrokapi.middlewares.register_middlewares import register_middleware
+from revgrokapi.router import router
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--host", default="0.0.0.0", help="host")

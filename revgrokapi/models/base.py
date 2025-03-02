@@ -1,9 +1,12 @@
-from typing import TypeVar, Optional, List, Any, Dict
+# base.py
+from typing import Any, Dict, List, Optional, TypeVar
+
+from pydantic import BaseModel
 from tortoise import Model, fields
 from tortoise.expressions import Q
-from pydantic import BaseModel
 
 ModelType = TypeVar("ModelType", bound=Model)
+
 
 class CRUDBase(Model):
     id = fields.IntField(pk=True)
@@ -25,12 +28,7 @@ class CRUDBase(Model):
 
     @classmethod
     async def get_multi(
-        cls,
-        *,
-        skip: int = 0,
-        limit: int = 100,
-        order_by: str = "-id",
-        **filters
+        cls, *, skip: int = 0, limit: int = 100, order_by: str = "-id", **filters
     ) -> List[ModelType]:
         """获取多条记录"""
         query = cls.filter(**filters)
@@ -100,12 +98,13 @@ class CRUDBase(Model):
     class PydanticMeta:
         exclude = ["created_at", "updated_at"]
 
+
 if __name__ == "__main__":
     # usage cases
 
     from tortoise import fields
-    from .base import CRUDBase
 
+    from .base import CRUDBase
 
     class User(CRUDBase):
         username = fields.CharField(max_length=50, unique=True)
@@ -115,14 +114,10 @@ if __name__ == "__main__":
         class Meta:
             table = "users"
 
-
     # 使用示例
     async def example():
         # 创建用户
-        user = await User.create_item(
-            username="test_user",
-            email="test@example.com"
-        )
+        user = await User.create_item(username="test_user", email="test@example.com")
 
         # 获取用户
         user = await User.get_by_id(1)
@@ -132,17 +127,12 @@ if __name__ == "__main__":
 
         # 获取用户列表
         users = await User.get_multi(
-            skip=0,
-            limit=10,
-            order_by="-created_at",
-            is_active=True
+            skip=0, limit=10, order_by="-created_at", is_active=True
         )
 
         # 搜索用户
         users = await User.search_items(
-            search_fields=["username", "email"],
-            search_term="test",
-            limit=10
+            search_fields=["username", "email"], search_term="test", limit=10
         )
 
         # 删除用户

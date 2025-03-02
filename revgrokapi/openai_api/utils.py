@@ -4,29 +4,45 @@ import asyncio
 import functools
 import json
 
-from loguru import logger
 from fastapi import Request
-from revgrokapi.models.cookie_models import CookieType, Cookie
+from loguru import logger
+
+from revgrokapi.models.cookie_models import Cookie, CookieType, QueryCategory, CookieQueries
 from revgrokapi.openai_api.schemas import ChatMessage
 from revgrokapi.revgrok.client import GrokClient
 from revgrokapi.utils.async_utils import async_retry
 
 
-async def select_cookie_client():
+async def select_cookie_client(model: str):
     """
     目前还没实现， 基于负载均衡， 轮训的， 还有其他的。
     """
     # 1. 获取所有的plus cookies ， 然后直接返回第一个
-    cookies = await Cookie.get_multi(cookie_type=CookieType.PLUS)
-    cookie =  cookies[0]
-    grok_client = GrokClient(cookie.cookie)
+
+    #
+    # cookies = await Cookie.get_multi(cookie_type=CookieType.PLUS)
+    # cookie = cookies[0]
+    # grok_client = GrokClient(cookie.cookie)
+    # 2. 负载均衡选取: async def get_random_weighted_cookie(cls, category: QueryCategory):
+    category = QueryCategory.DEFAULT
+    if "reasoner" in model.lower():
+        category = QueryCategory.REASONING
+    elif "deepresearch" in model.lower():
+        category = QueryCategory.DEEPSEARCH
+
+    cookie_ref = await CookieQueries.get_random_weighted_cookie(category)
+    grok_client = GrokClient(cookie_ref.cookie)
+
     return grok_client
+
 
 @async_retry(retries=3, delay=1)
 async def grok_chat(model: str, prompt: str):
-    grok_client = await select_cookie_client()
+    grok_client = await select_cookie_client(model)
     reasoning = "reasoner" in model.lower()
-    deepresearch = "deepresearch" in model.lower() # give me a deep survey about the video generation type model
+    deepresearch = (
+        "deepresearch" in model.lower()
+    )  # give me a deep survey about the video generation type model
     response_text = ""
     # if "deepresearch" in model.lower():
     model = "grok-3"
@@ -38,7 +54,9 @@ async def grok_chat(model: str, prompt: str):
 
     is_thinking = None  # Track current thinking state
     step_id = 1
-    async for (chunk, chunk_json) in grok_client.chat(prompt, model, reasoning, deepresearch):
+    async for (chunk, chunk_json) in grok_client.chat(
+        prompt, model, reasoning, deepresearch
+    ):
         if "Just a moment" in chunk:
             raise RuntimeError("CF error, retryiing....")
         if "messageStepId" in str(chunk_json):
@@ -56,7 +74,7 @@ async def grok_chat(model: str, prompt: str):
             # logger.debug(f"isThinking: {new_thinking_state}\n new_thinking_state: {new_thinking_state}")
             # if new_thinking_state and chunk.endswith("\n"):
             #     chunk = chunk[:-1] + "\n>"
-                # If we're transitioning from thinking to not thinking, close the think tag
+            # If we're transitioning from thinking to not thinking, close the think tag
             if (is_thinking) and (new_thinking_state == False) and reasoning:
                 yield "</think>\n"
                 # Update thinking state
@@ -75,18 +93,24 @@ async def grok_chat(model: str, prompt: str):
                 chunk = f"\n  ***{action} with {action_params}***"
 
         if "modelResponse" in str(chunk_json) and deepresearch:
-
-            chunk = chunk_json.get("result", {}).get("response", {}).get("modelResponse", {})\
-            .get("message", "")
+            chunk = (
+                chunk_json.get("result", {})
+                .get("response", {})
+                .get("modelResponse", {})
+                .get("message", "")
+            )
             chunk = "\n" + chunk
 
         yield chunk
         response_text += chunk
-    logger.info(f"""{{
+    logger.info(
+        f"""{{
         "model": "{model}",
         "prompt": "{prompt}",
         "response_text": "{response_text}"
-    }}""")
+    }}"""
+    )
+
 
 async def extract_messages_and_images(messages: list[ChatMessage]):
     texts = []

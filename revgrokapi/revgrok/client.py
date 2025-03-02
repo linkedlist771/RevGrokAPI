@@ -65,10 +65,11 @@
 #                     chunk_json.get("result", {}).get("response", {}).get("token", "")
 #                 )
 #                 yield response, chunk_json
-import json
-from loguru import logger
 import asyncio
+import json
+
 from curl_cffi.requests import AsyncSession, BrowserType
+from loguru import logger
 
 from .configs import CHAT_URL, RATE_LIMIT_URL
 from .utils import get_default_chat_payload, get_default_user_agent
@@ -93,12 +94,19 @@ class GrokClient:
             "Sec-Fetch-Site": "same-origin",
             "User-Agent": self.user_agent,
         }
+
     def __init__(self, cookie: str, user_agent: str | None = None):
         self.cookie = cookie
         self.user_agent = user_agent if user_agent else get_default_user_agent()
         self.client = AsyncSession(impersonate=BrowserType.chrome120)
 
-    async def chat(self, prompt: str, model: str, reasoning: bool = False, deepresearch: bool = False):
+    async def chat(
+        self,
+        prompt: str,
+        model: str,
+        reasoning: bool = False,
+        deepresearch: bool = False,
+    ):
         default_payload = get_default_chat_payload()
         update_payload = {
             "modelName": model,
@@ -111,15 +119,15 @@ class GrokClient:
         payload = default_payload
 
         async with self.client.stream(
-                method="POST",
-                url=CHAT_URL,
-                headers=self.headers,
-                json=payload,
-                timeout=600.0,
+            method="POST",
+            url=CHAT_URL,
+            headers=self.headers,
+            json=payload,
+            timeout=600.0,
         ) as response:
             # curl_cffi 返回的是字节，需要解码
             async for chunk_bytes in response.aiter_lines():
-                chunk = chunk_bytes.decode('utf-8')
+                chunk = chunk_bytes.decode("utf-8")
                 logger.debug(chunk)
                 try:
                     # yield parsed_output_and the chunk it self,
@@ -147,7 +155,9 @@ class GrokClient:
             "requestKind": request_kind,
             "modelName": model_name,
         }
-        rate_limit_response = await self.client.post(url, headers=self.headers, json=payload)
+        rate_limit_response = await self.client.post(
+            url, headers=self.headers, json=payload
+        )
         return request_kind, rate_limit_response.json()
 
     async def get_rate_limit(self):
@@ -161,5 +171,7 @@ class GrokClient:
 
         # Format results into a dictionary {request_kind: rate_limit_data}
         rate_limits = {kind: data for kind, data in results}
-
+        # {'DEFAULT': {'windowSizeSeconds': 7200, 'remainingQueries': 75, 'totalQueries': 100},
+        #  'REASONING': {'windowSizeSeconds': 7200, 'remainingQueries': 17, 'totalQueries': 30},
+        #  'DEEPSEARCH': {'windowSizeSeconds': 7200, 'remainingQueries': 25, 'totalQueries': 30}}
         return rate_limits

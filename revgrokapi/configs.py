@@ -14,10 +14,12 @@ USE_TOKEN_SHORTEN = True
 
 DATA_DIR = ROOT / "data"
 
-DB_PATH =  DATA_DIR / "db.sqlite3"
-DB_URL=f"sqlite://{DB_PATH}"
+DB_PATH = DATA_DIR / "db.sqlite3"
+DB_URL = f"sqlite://{DB_PATH}"
 
 POE_OPENAI_LIKE_API_KEY = "sk-poe-api-dfascvu2"
+
+GROK_CLIENT_LIMIT_CHECKS_INTERVAL_MINUTES = 20
 
 if __name__ == "__main__":
     print(ROOT)

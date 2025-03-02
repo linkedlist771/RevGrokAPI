@@ -28,7 +28,6 @@ VALID_API_KEY = POE_OPENAI_LIKE_API_KEY
 router = APIRouter()
 
 
-
 async def _async_resp_generator(original_generator, model: str):
     i = 0
     response_text = ""
@@ -81,9 +80,7 @@ async def streaming_message(request: ChatCompletionRequest, api_key: str = None)
     # files = []
     messages = request.messages
     # messages, file_paths = await extract_messages_and_images(messages)
-    prompt = "\n".join(
-        [f"{message.role}: {message.content}" for message in messages]
-    )
+    prompt = "\n".join([f"{message.role}: {message.content}" for message in messages])
     return grok_chat(model, prompt)
     # last_message = messages[-1]
     # request_model = request.model
@@ -112,7 +109,7 @@ async def streaming_message(request: ChatCompletionRequest, api_key: str = None)
     #         file_paths=file_paths,
     #     )
 
-        # return streaming_res
+    # return streaming_res
     # else:
 
     #     title = await conversation_history_manager.get_conversation_title(

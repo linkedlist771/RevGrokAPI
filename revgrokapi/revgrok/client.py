@@ -68,7 +68,7 @@
 import json
 from loguru import logger
 
-from curl_cffi.requests import AsyncSession
+from curl_cffi.requests import AsyncSession, BrowserType
 
 from .configs import CHAT_URL
 from .utils import get_default_chat_payload, get_default_user_agent
@@ -85,16 +85,18 @@ class GrokClient:
             "Cookie": self.cookie,
             "Origin": "https://grok.com",
             "Referer": "https://grok.com/",
+            "Sec-Ch-Ua": '"Not A(Brand";v="99", "Google Chrome";v="121", "Chromium";v="121"',
+            "Sec-Ch-Ua-Mobile": "?0",
+            "Sec-Ch-Ua-Platform": '"Windows"',
             "Sec-Fetch-Dest": "empty",
             "Sec-Fetch-Mode": "cors",
             "Sec-Fetch-Site": "same-origin",
             "User-Agent": self.user_agent,
         }
-
     def __init__(self, cookie: str, user_agent: str | None = None):
         self.cookie = cookie
         self.user_agent = user_agent if user_agent else get_default_user_agent()
-        self.client = AsyncSession()
+        self.client = AsyncSession(impersonate=BrowserType.chrome120, browser_version="120.0.0.0")     # 使用较新版本的Chrome)
 
     async def chat(self, prompt: str, model: str, reasoning: bool = False, deepresearch: bool = False):
         default_payload = get_default_chat_payload()

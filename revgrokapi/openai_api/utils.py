@@ -38,6 +38,7 @@ async def select_cookie_client(model: str):
 
 @async_retry(retries=3, delay=1)
 async def grok_chat(model: str, prompt: str):
+    logger.info(f"{{'model': '{model}', 'prompt': '{prompt}'}}")
     grok_client = await select_cookie_client(model)
     reasoning = "reasoner" in model.lower()
     deepresearch = (

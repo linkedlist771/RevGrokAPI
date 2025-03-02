@@ -126,9 +126,12 @@ class GrokClient:
             timeout=600.0,
         ) as response:
             # curl_cffi 返回的是字节，需要解码
+            is_first_chunk = True
             async for chunk_bytes in response.aiter_lines():
                 chunk = chunk_bytes.decode("utf-8")
-                logger.debug(chunk)
+                if is_first_chunk:
+                    logger.debug(f"First chunk: {chunk}")
+                    is_first_chunk = False
                 try:
                     # yield parsed_output_and the chunk it self,
                     chunk_json = json.loads(chunk)

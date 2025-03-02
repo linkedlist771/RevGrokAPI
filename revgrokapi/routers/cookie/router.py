@@ -169,7 +169,7 @@ async def delete_cookie(cookie_id: int):
             detail=f"Cookie with ID {cookie_id} not found",
         )
 
-@router.get("/stats/refreshed")
+@router.get("/stats/refresh")
 async def get_refreshed_cookie_stats():
     await __check_grok_clients_limits()
     return {"message": "Cookie stats refreshed"}

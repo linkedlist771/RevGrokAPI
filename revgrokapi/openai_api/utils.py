@@ -19,7 +19,7 @@ async def select_cookie_client():
     # 1. 获取所有的plus cookies ， 然后直接返回第一个
     cookies = await Cookie.get_multi(cookie_type=CookieType.PLUS)
     cookie =  cookies[0]
-    grok_client = GrokClient(cookie.cookie, user_agent='curl/7.64.0')
+    grok_client = GrokClient(cookie.cookie)
     return grok_client
 
 

@@ -34,12 +34,6 @@ async def grok_chat(model: str, prompt: str):
         response_text += "<think>\n"
         yield ""
         yield "<think>\n"
-
-    # if deepresearch:
-        # yield "---\n"
-        # yield ">"
-
-
     current_message_id = None
 
     is_thinking = None  # Track current thinking state
@@ -58,8 +52,8 @@ async def grok_chat(model: str, prompt: str):
         if "isThinking" in str(chunk_json):
             new_thinking_state = chunk_json["result"]["response"]["isThinking"]
             # logger.debug(f"isThinking: {new_thinking_state}\n new_thinking_state: {new_thinking_state}")
-            if new_thinking_state and chunk.endswith("\n"):
-                chunk = chunk[:-1] + "\n>"
+            # if new_thinking_state and chunk.endswith("\n"):
+            #     chunk = chunk[:-1] + "\n>"
                 # If we're transitioning from thinking to not thinking, close the think tag
             if (is_thinking) and (new_thinking_state == False) and reasoning:
                 yield "</think>\n"
@@ -77,8 +71,6 @@ async def grok_chat(model: str, prompt: str):
                 for k, v in action_json["action_input"].items():
                     action_params += f"{k}: {v},"
                 chunk = f"\n  ***{action} with {action_params}***"
-
-
 
         if "modelResponse" in str(chunk_json) and deepresearch:
 

@@ -189,5 +189,6 @@ class CookieQueries(CRUDBase):
         selected_index = np.random.choice(len(cookies), p=weights)
         selected_cookie_info = await cookies[selected_index].to_dict()
         logger.debug(f"Selected cookie: \n{selected_cookie_info}")
+        logger.debug(f"Selected weight: {weights[selected_index]}")
 
         return cookies[selected_index] # Cookie 返回的是这个类型的。

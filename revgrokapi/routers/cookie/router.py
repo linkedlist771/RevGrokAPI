@@ -74,7 +74,7 @@ async def create_cookie(cookie_in: CookieCreateRequest):
 
 
 
-@router.post("/batch_upload", response_model=CookieResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/batch_upload", response_model=List[CookieResponse], status_code=status.HTTP_201_CREATED)
 async def create_cookie(cookie: str, cookie_type: CookieType, account: str):
     cookie_str = cookie
     cookie_str = cookie_str.strip()

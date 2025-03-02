@@ -78,7 +78,7 @@ async def create_cookie(cookie_in: CookieCreateRequest):
 async def create_cookie(cookie: str, cookie_type: CookieType, account: str):
     cookie_str = cookie
     cookie_str = cookie_str.strip()
-    cookie_strs = cookie_str.split("\n")
+    cookie_strs = cookie_str.split()
     cookies = []
     accounts = []
     types = [cookie_type] * len(cookie_strs)

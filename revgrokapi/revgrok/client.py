@@ -96,7 +96,7 @@ class GrokClient:
     def __init__(self, cookie: str, user_agent: str | None = None):
         self.cookie = cookie
         self.user_agent = user_agent if user_agent else get_default_user_agent()
-        self.client = AsyncSession(impersonate=BrowserType.chrome120, browser_version="120.0.0.0")     # 使用较新版本的Chrome)
+        self.client = AsyncSession(impersonate=BrowserType.chrome120)
 
     async def chat(self, prompt: str, model: str, reasoning: bool = False, deepresearch: bool = False):
         default_payload = get_default_chat_payload()

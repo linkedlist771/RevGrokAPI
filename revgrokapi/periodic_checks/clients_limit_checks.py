@@ -63,7 +63,7 @@ async def __check_grok_clients_limits():
         except Exception as e:
             from traceback import format_exc
             logger.error(f"Error checking rate limit for cookie {cookie.id}: {format_exc()}")
-            return error_msg
+            return e
 
     async def process_batch(batch):
         return await asyncio.gather(*[check_cookie(cookie) for cookie in batch])

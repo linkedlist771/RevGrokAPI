@@ -3,10 +3,13 @@ import time
 
 from loguru import logger
 from tqdm.asyncio import tqdm
-
+from asyncio import to_thread
 from revgrokapi.models import Cookie
 from revgrokapi.models.cookie_models import CookieQueries
 from revgrokapi.revgrok import GrokClient
+from concurrent.futures import ProcessPoolExecutor
+
+
 
 
 async def __check_grok_clients_limits():
@@ -39,7 +42,7 @@ async def __check_grok_clients_limits():
         return await asyncio.gather(*[check_cookie(cookie) for cookie in batch])
 
     results = []
-    batch_size = 3  # 每批处理的客户端数量
+    batch_size = 10 # 每批处理的客户端数量
     total_batches = (len(all_cookies) + batch_size - 1) // batch_size
 
     for i in range(0, len(all_cookies), batch_size):
@@ -49,7 +52,7 @@ async def __check_grok_clients_limits():
         results.extend(batch_results)
         if i + batch_size < len(all_cookies):
             logger.info("Waiting between batches...")
-            await asyncio.sleep(1)  # 批次之间的间隔
+            await asyncio.sleep(2)  # 批次之间的间隔
 
     time_elapsed = time.perf_counter() - start_time
     logger.debug(f"Time elapsed: {time_elapsed:.2f} seconds")
@@ -58,6 +61,18 @@ async def __check_grok_clients_limits():
 
 
 async def check_grok_clients_limits():
-    # 使用 create_task，但不等待它完成
-    task = asyncio.create_task(__check_grok_clients_limits())
-    return {"message": "Grok clients check started in background"}
+    # Create a process pool executor
+    loop = asyncio.get_running_loop()
+
+    # Define a wrapper function
+    def process_wrapper():
+        asyncio.run(__check_grok_clients_limits())
+
+    # Run the function in a process pool without waiting
+    with ProcessPoolExecutor(max_workers=1) as executor:
+        loop.run_in_executor(executor, process_wrapper)
+    logger.info("Grok clients check started in background process")
+
+    return {"message": "Grok clients check started in background process"}
+
+

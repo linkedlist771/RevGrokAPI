@@ -19,7 +19,7 @@ DB_URL = f"sqlite://{DB_PATH}"
 
 POE_OPENAI_LIKE_API_KEY = "sk-poe-api-dfascvu2"
 
-GROK_CLIENT_LIMIT_CHECKS_INTERVAL_MINUTES = 20
+GROK_CLIENT_LIMIT_CHECKS_INTERVAL_MINUTES = 1 * 60
 
 if __name__ == "__main__":
     print(ROOT)

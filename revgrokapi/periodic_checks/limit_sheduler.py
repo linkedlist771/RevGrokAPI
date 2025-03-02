@@ -24,7 +24,7 @@ class LimitScheduler:
 
     @staticmethod
     async def start():
-        # await check_grok_clients_limits()
+        await check_grok_clients_limits()
         limit_check_scheduler.start()
 
     @staticmethod

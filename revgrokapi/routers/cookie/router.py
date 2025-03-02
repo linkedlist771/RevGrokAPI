@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from tortoise import Model, fields
 from tortoise.expressions import Q
 
-from revgrokapi.models.cookie_models import Cookie, CookieType
+from revgrokapi.models.cookie_models import Cookie, CookieType, CookieQueries, QueryCategory
 
 
 # Pydantic schemas for API request/response models
@@ -33,6 +33,17 @@ class CookieResponse(CookieBase):
 
     class Config:
         orm_mode = True
+
+
+class CookieTotalCountResponse(BaseModel):
+    total_count: int
+    model_counts: Dict[str, int]
+
+
+class CookieTypeModelCountResponse(BaseModel):
+    cookie_type: str
+    total_count: int
+    model_counts: Dict[str, int]
 
 
 # FastAPI router for RESTful endpoints
@@ -113,3 +124,59 @@ async def delete_cookie(cookie_id: int):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Cookie with ID {cookie_id} not found",
         )
+
+
+@router.get("/stats/total", response_model=CookieTotalCountResponse)
+async def get_total_cookie_stats():
+    """
+    获取所有cookie的总数和各模型的可用量
+    """
+    # 获取所有cookie的总数
+    total_count = await Cookie.get_count()
+    
+    # 获取各模型的可用量
+    model_counts = {}
+    for category in QueryCategory:
+        # 获取该模型下权重大于0的cookie数量
+        cookies_with_weight = await CookieQueries.filter(
+            category=category,
+            queries_weight__gt=0
+        ).count()
+        model_counts[category.value] = cookies_with_weight
+    
+    return {
+        "total_count": total_count,
+        "model_counts": model_counts
+    }
+
+
+@router.get("/stats/by-type", response_model=List[CookieTypeModelCountResponse])
+async def get_cookie_stats_by_type():
+    """
+    获取按cookie类型分组的各模型可用量
+    """
+    result = []
+    
+    # 遍历所有cookie类型
+    for cookie_type in CookieType:
+        # 获取该类型的cookie总数
+        type_count = await Cookie.get_count(cookie_type=cookie_type)
+        
+        # 获取该类型下各模型的可用量
+        model_counts = {}
+        for category in QueryCategory:
+            # 获取该类型和模型下权重大于0的cookie数量
+            cookies_with_weight = await CookieQueries.filter(
+                cookie_ref__cookie_type=cookie_type,
+                category=category,
+                queries_weight__gt=0
+            ).count()
+            model_counts[category.value] = cookies_with_weight
+        
+        result.append({
+            "cookie_type": cookie_type.value,
+            "total_count": type_count,
+            "model_counts": model_counts
+        })
+    
+    return result

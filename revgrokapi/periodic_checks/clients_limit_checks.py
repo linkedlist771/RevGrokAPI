@@ -9,32 +9,6 @@ from revgrokapi.models.cookie_models import CookieQueries
 from revgrokapi.revgrok import GrokClient
 
 
-async def _check_grok_clients_limits():
-    all_cookies = await Cookie.get_multi()
-    for cookie in all_cookies:
-        grok_client = GrokClient(cookie.cookie)
-        default_weights = {
-            "DEFAULT": 1,
-            "REASONING": 1,
-            "DEEPSEARCH": 1
-        }
-        try:
-            rate_limit = await grok_client.get_rate_limit()
-            # {'DEFAULT': {'windowSizeSeconds': 7200, 'remainingQueries': 75, 'totalQueries': 100},
-            #  'REASONING': {'windowSizeSeconds': 7200, 'remainingQueries': 17, 'totalQueries': 30},
-            #  'DEEPSEARCH': {'windowSizeSeconds': 7200, 'remainingQueries': 25, 'totalQueries': 30}}
-
-            for kind, data in rate_limit.items():
-                default_weights[kind] = data["remainingQueries"]
-        except Exception as e:
-            from traceback import format_exc
-            logger.error(f"Error checking rate limit for cookie {cookie.id}: {format_exc()}")
-        # 同时更新多个类别的权重
-        await CookieQueries.update_weights(
-            cookie=cookie,  # cookie 传入的就是这个
-            weights=default_weights
-        )
-
 
 async def __check_grok_clients_limits():
     start_time = time.perf_counter()

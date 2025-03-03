@@ -39,10 +39,8 @@ async def select_cookie_client(model: str):
 
 @async_retry(retries=3, delay=1)
 async def grok_chat(model: str, prompt: str):
-    prompt = prompt.replace("""上面是之前的历史记录,对于下面的问题，不管多简单，多复杂，都需要详细思考后给出答案。下面是你的回复格式:
-    <think>
-    # put your thinking here
-    </think>""", "")
+    prompt = prompt.replace("""system: 上面是之前的历史记录,对于下面的问题，不管多简单，多复杂，都需要详细思考后给出答案。下面是你的回复格式:     
+<think>     # put your thinking here     </think>""", "")
     logger.info(f"{{'model': '{model}', 'prompt': '{prompt}'}}")
     grok_client = await select_cookie_client(model)
     reasoning = "reasoner" in model.lower()
@@ -52,12 +50,11 @@ async def grok_chat(model: str, prompt: str):
     response_text = ""
     # if "deepresearch" in model.lower():
     model = "grok-3"
-    # if reasoning:
-    #     response_text += "<think>\n"
-    #     # yield ""
-    #     yield "<think>"
-    #     yield "\n"
-    #     yield ">"
+    if reasoning:
+        response_text += "<think>\n"
+        # yield ""
+        yield "\n>"
+        yield "<think>"
     current_message_id = None
 
     is_thinking = None  # Track current thinking state

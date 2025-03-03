@@ -61,6 +61,8 @@ async def grok_chat(model: str, prompt: str):
     async for (chunk, chunk_json) in grok_client.chat(
         prompt, model, reasoning, deepresearch
     ):
+        response_text += chunk
+
         if "Just a moment" in chunk:
             raise RuntimeError("CF error, retryiing....")
         if "messageStepId" in str(chunk_json):
@@ -109,7 +111,6 @@ async def grok_chat(model: str, prompt: str):
             chunk = "\n" + chunk
 
         yield chunk
-        response_text += chunk
     logger.info(
         f"""{{
         "model": "{model}",

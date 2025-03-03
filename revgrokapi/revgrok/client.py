@@ -141,7 +141,7 @@ class GrokClient:
                     yield chunk, {}
                     # return
 
-                if "error" in chunk:
+                if "error" in chunk and "isThinking" not in chunk:
                     # error_message = chunk_json.get("error").get("message")
                     yield chunk, chunk_json
                     return

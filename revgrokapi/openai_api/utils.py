@@ -87,7 +87,7 @@ async def grok_chat(model: str, prompt: str):
                 yield "</think>"
                 yield "\n"
                 # Update thinking state
-                is_thinking = new_thinking_state
+            is_thinking = new_thinking_state
 
         if deepresearch:
             if chunk.endswith("\n"):

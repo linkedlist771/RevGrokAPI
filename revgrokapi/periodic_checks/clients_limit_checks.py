@@ -58,16 +58,13 @@ async def __check_grok_clients_limits():
         logger.info(result)
 
 
-# Define this function at the module level, not inside another function
-def run_grok_check():
-    asyncio.run(__check_grok_clients_limits())
-
-
 async def check_grok_clients_limits():
     # Use multiprocessing directly instead of ProcessPoolExecutor
-    process = multiprocessing.Process(target=run_grok_check)
-    process.daemon = True
-    process.start()
+    # process = multiprocessing.Process(target=run_grok_check)
+    # process.daemon = True
+    # process.start()
+    #
+    # logger.info("Grok clients check started in background process")
+    task = asyncio.create_task(__check_grok_clients_limits())
 
-    logger.info("Grok clients check started in background process")
     return {"message": "Grok clients check started in background process"}

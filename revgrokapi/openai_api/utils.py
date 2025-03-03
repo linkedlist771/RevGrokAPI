@@ -85,7 +85,7 @@ async def grok_chat(model: str, prompt: str):
             # If we're transitioning from thinking to not thinking, close the think tag
             if (is_thinking) and (new_thinking_state == False) and reasoning:
                 yield "</think>"
-                yield "\n"
+                yield "\n\n"
                 # Update thinking state
             is_thinking = new_thinking_state
 

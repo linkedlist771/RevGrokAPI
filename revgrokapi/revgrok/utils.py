@@ -29,7 +29,7 @@ def get_default_chat_payload():
         "imageGenerationCount": 2,
         "forceConcise": False,
         "toolOverrides": {
-            "imageGen": True,
+            "imageGen": False,
             "webSearch": True,
             "xSearch": False,
             "xMediaSearch": False,

@@ -75,8 +75,8 @@ async def grok_chat(model: str, prompt: str):
         # Check if thinking state changed: reasoning case
         if "isThinking" in str(chunk_json):
             new_thinking_state = chunk_json["result"]["response"]["isThinking"]
-            if new_thinking_state and chunk.endswith("\n"):
-                chunk = chunk[:-1] + "\\n>"
+            if new_thinking_state and chunk == "\n":
+                chunk = "\n>"
             # logger.debug(f"isThinking: {new_thinking_state}\n new_thinking_state: {new_thinking_state}")
             # if new_thinking_state and chunk.endswith("\n"):
             #     chunk = chunk[:-1] + "\n>"

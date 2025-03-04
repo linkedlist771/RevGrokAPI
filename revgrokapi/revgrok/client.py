@@ -73,6 +73,7 @@ from loguru import logger
 
 from .configs import CHAT_URL, RATE_LIMIT_URL
 from .utils import get_default_chat_payload, get_default_user_agent
+from ..configs import PROXIES
 
 
 class GrokClient:
@@ -99,7 +100,7 @@ class GrokClient:
         self.cookie = cookie
         self.user_agent = user_agent if user_agent else get_default_user_agent()
         self.client = AsyncSession(impersonate=BrowserType.chrome120,
-                                   proxies=
+                                   proxies=PROXIES
                                    )
 
     async def chat(

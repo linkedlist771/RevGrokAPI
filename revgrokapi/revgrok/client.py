@@ -98,7 +98,9 @@ class GrokClient:
     def __init__(self, cookie: str, user_agent: str | None = None):
         self.cookie = cookie
         self.user_agent = user_agent if user_agent else get_default_user_agent()
-        self.client = AsyncSession(impersonate=BrowserType.chrome120)
+        self.client = AsyncSession(impersonate=BrowserType.chrome120,
+                                   proxies=
+                                   )
 
     async def chat(
         self,

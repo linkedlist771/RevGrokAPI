@@ -164,5 +164,5 @@ async def chat_completions(
         "object": "chat.completion",
         "created": time.time(),
         "model": request.model,
-        "choices": [{"message": ChatMessage(role="assistant", content=resp_content)}],
+        "choices": [{"message": ChatMessage(role="assistant", content="not implemented")}],
     }

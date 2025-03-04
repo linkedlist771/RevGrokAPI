@@ -37,7 +37,7 @@ async def select_cookie_client(model: str):
     return grok_client
 
 
-@async_retry(retries=3, delay=1)
+@async_retry(retries=4, delay=3)
 async def grok_chat(model: str, prompt: str):
     prompt = prompt.replace("""system: 上面是之前的历史记录,对于下面的问题，不管多简单，多复杂，都需要详细思考后给出答案。下面是你的回复格式:     <think>     # put your thinking here     </think>""", "")
     logger.info(f"{{'model': '{model}', 'prompt': '{prompt}'}}")

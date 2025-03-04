@@ -74,6 +74,7 @@ from loguru import logger
 from .configs import CHAT_URL, RATE_LIMIT_URL
 from .utils import get_default_chat_payload, get_default_user_agent
 from ..configs import PROXIES
+from ..utils.async_utils import async_retry
 
 
 class GrokClient:
@@ -154,6 +155,7 @@ class GrokClient:
                 )
                 yield response, chunk_json
 
+    @async_retry(retries=4, delay=3)
     async def _get_single_rate_limit(self, request_kind, model_name="grok-3"):
         """Helper method to fetch rate limit for a specific request kind"""
         url = RATE_LIMIT_URL

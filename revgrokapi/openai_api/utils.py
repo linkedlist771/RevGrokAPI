@@ -21,14 +21,14 @@ async def select_cookie_client(model: str):
     # 1. 获取所有的plus cookies ， 然后直接返回第一个
 
     #
-    cookies = await Cookie.get_multi(cookie_type=CookieType.PLUS)
-    cookie = cookies[0]
-
-    grok_client = GrokClient(cookie.cookie)
-    selected_cookie_info = await cookie.to_dict()
-
-    logger.debug(f"cookie: {selected_cookie_info}")
-    return grok_client
+    # cookies = await Cookie.get_multi(cookie_type=CookieType.PLUS)
+    # cookie = cookies[0]
+    #
+    # grok_client = GrokClient(cookie.cookie)
+    # selected_cookie_info = await cookie.to_dict()
+    #
+    # logger.debug(f"cookie: {selected_cookie_info}")
+    # return grok_client
     # 下面的目前有点问题
     # 2. 负载均衡选取: async def get_random_weighted_cookie(cls, category: QueryCategory):
     category = QueryCategory.DEFAULT

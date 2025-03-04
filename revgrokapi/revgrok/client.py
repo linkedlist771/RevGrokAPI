@@ -178,9 +178,8 @@ class GrokClient:
             ) as response:
                 # 检查是否遇到Cloudflare挑战
                 # 注意：curl_cffi的响应对象没有aread方法，需要使用text属性
-                if response.status_code == 403 or response.status_code == 503:
                     # 对于curl_cffi，直接使用response.text获取内容
-                    if "Just a moment" in response.text or "challenge-running" in response.text:
+                if "Just a moment" in response.text or "challenge-running" in response.text:
                         # 处理Cloudflare挑战
                         success = await self._handle_cloudflare(CHAT_URL)
                         if success:

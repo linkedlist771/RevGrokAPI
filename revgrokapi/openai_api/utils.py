@@ -24,6 +24,7 @@ async def select_cookie_client(model: str):
     cookies = await Cookie.get_multi(cookie_type=CookieType.PLUS)
     cookie = cookies[0]
     grok_client = GrokClient(cookie.cookie)
+    logger.debug(f"cookie: {cookie}")
     return grok_client
     # 下面的目前有点问题
     # 2. 负载均衡选取: async def get_random_weighted_cookie(cls, category: QueryCategory):

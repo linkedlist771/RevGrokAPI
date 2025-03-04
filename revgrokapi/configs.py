@@ -21,13 +21,13 @@ POE_OPENAI_LIKE_API_KEY = "sk-poe-api-dfascvu2"
 
 GROK_CLIENT_LIMIT_CHECKS_INTERVAL_MINUTES = 1 * 60
 
+PROXIES = {}
 
 
-
-PROXIES = {
-    "http": "http://127.0.0.1:7890",
-    "https": "http://127.0.0.1:7890",
-} if not os.environ.get("PRODUCTION") else None
+# PROXIES = {
+#     "http": "http://127.0.0.1:7890",
+#     "https": "http://127.0.0.1:7890",
+# } if not os.environ.get("PRODUCTION") else None
 
 if __name__ == "__main__":
     print(ROOT)

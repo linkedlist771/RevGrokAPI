@@ -101,12 +101,10 @@ class GrokClient:
     def __init__(self, cookie: str, user_agent: str | None = None):
         self.cookie = cookie
         self.user_agent = user_agent if user_agent else get_default_user_agent()
-        # 改进浏览器仿真方式，更好地处理Cloudflare
         self.client = AsyncSession(
             impersonate=BrowserType.chrome120,
             proxies=PROXIES,
-
-            timeout=60.0  # 增加默认超时时间
+            timeout=60.0
         )
         self.cf_clearance = self._extract_cf_clearance(cookie)
 
@@ -179,10 +177,10 @@ class GrokClient:
                     timeout=600.0,
             ) as response:
                 # 检查是否遇到Cloudflare挑战
+                # 注意：curl_cffi的响应对象没有aread方法，需要使用text属性
                 if response.status_code == 403 or response.status_code == 503:
-                    content = await response.aread()
-                    content_text = content.decode('utf-8', errors='ignore')
-                    if "Just a moment" in content_text or "challenge-running" in content_text:
+                    # 对于curl_cffi，直接使用response.text获取内容
+                    if "Just a moment" in response.text or "challenge-running" in response.text:
                         # 处理Cloudflare挑战
                         success = await self._handle_cloudflare(CHAT_URL)
                         if success:
@@ -210,10 +208,10 @@ class GrokClient:
                         yield chunk, chunk_json
                         return
 
-                    response = (
+                    response_token = (
                         chunk_json.get("result", {}).get("response", {}).get("token", "")
                     )
-                    yield response, chunk_json
+                    yield response_token, chunk_json
 
         except Exception as e:
             logger.error(f"聊天请求出错: {e}")
@@ -243,8 +241,8 @@ class GrokClient:
 
             # 检查是否遇到Cloudflare挑战
             if rate_limit_response.status_code == 403 or rate_limit_response.status_code == 503:
-                content = rate_limit_response.text
-                if "Just a moment" in content or "challenge-running" in content:
+                # 对于curl_cffi，使用text属性
+                if "Just a moment" in rate_limit_response.text or "challenge-running" in rate_limit_response.text:
                     # 处理Cloudflare挑战
                     success = await self._handle_cloudflare(url)
                     if success:

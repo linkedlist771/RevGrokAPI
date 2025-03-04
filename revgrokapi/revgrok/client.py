@@ -67,7 +67,8 @@
 #                 yield response, chunk_json
 import asyncio
 import json
-
+import time
+import re
 from curl_cffi.requests import AsyncSession, BrowserType
 from loguru import logger
 
@@ -100,16 +101,66 @@ class GrokClient:
     def __init__(self, cookie: str, user_agent: str | None = None):
         self.cookie = cookie
         self.user_agent = user_agent if user_agent else get_default_user_agent()
-        self.client = AsyncSession(impersonate=BrowserType.chrome120,
-                                   proxies=PROXIES
-                                   )
+        # 改进浏览器仿真方式，更好地处理Cloudflare
+        self.client = AsyncSession(
+            impersonate=BrowserType.chrome120,
+            proxies=PROXIES,
+            browser_args=[
+                "--disable-blink-features=AutomationControlled",
+                "--disable-features=IsolateOrigins,site-per-process",
+            ],
+            timeout=60.0  # 增加默认超时时间
+        )
+        self.cf_clearance = self._extract_cf_clearance(cookie)
 
+    def _extract_cf_clearance(self, cookie: str) -> str:
+        """从cookie字符串中提取cf_clearance值"""
+        match = re.search(r'cf_clearance=([^;]+)', cookie)
+        return match.group(1) if match else ""
+
+    async def _handle_cloudflare(self, url: str) -> bool:
+        """处理Cloudflare挑战并获取所需的cookies"""
+        logger.info("检测到Cloudflare挑战，尝试解决...")
+        try:
+            # 直接访问主页面获取Cloudflare cookies
+            response = await self.client.get(
+                "https://grok.com/",
+                headers={k: v for k, v in self.headers.items() if k != "Content-Type"},
+                impersonate=BrowserType.chrome120
+            )
+
+            # 检查是否仍在Cloudflare挑战页面
+            if "Just a moment" in response.text or "challenge-running" in response.text:
+                logger.warning("仍在Cloudflare挑战页面，等待5秒后重试...")
+                await asyncio.sleep(5)
+                return False
+
+            # 从响应中提取新的cookies
+            cookies = response.cookies
+            if cookies:
+                # 更新cookie
+                for name, value in cookies.items():
+                    if name == "cf_clearance" and value:
+                        self.cf_clearance = value
+                        if "cf_clearance=" in self.cookie:
+                            self.cookie = re.sub(r'cf_clearance=[^;]+', f'cf_clearance={value}', self.cookie)
+                        else:
+                            self.cookie += f"; cf_clearance={value}"
+                        logger.info("成功获取新的cf_clearance")
+                return True
+
+            return False
+        except Exception as e:
+            logger.error(f"处理Cloudflare挑战时出错: {e}")
+            return False
+
+    @async_retry(retries=3, delay=2)
     async def chat(
-        self,
-        prompt: str,
-        model: str,
-        reasoning: bool = False,
-        deepresearch: bool = False,
+            self,
+            prompt: str,
+            model: str,
+            reasoning: bool = False,
+            deepresearch: bool = False,
     ):
         default_payload = get_default_chat_payload()
         update_payload = {
@@ -122,40 +173,61 @@ class GrokClient:
         default_payload.update(update_payload)
         payload = default_payload
 
-        async with self.client.stream(
-            method="POST",
-            url=CHAT_URL,
-            headers=self.headers,
-            json=payload,
-            timeout=600.0,
-        ) as response:
-            # curl_cffi 返回的是字节，需要解码
-            is_first_chunk = True
-            async for chunk_bytes in response.aiter_lines():
-                chunk = chunk_bytes.decode("utf-8")
-                if is_first_chunk:
-                    logger.debug(f"First chunk: {chunk}")
-                    is_first_chunk = False
-                try:
-                    # yield parsed_output_and the chunk it self,
-                    chunk_json = json.loads(chunk)
-                except json.JSONDecodeError:
-                    logger.debug(chunk)
-                    chunk_json = {}
-                    yield chunk, {}
-                    # return
+        try:
+            async with self.client.stream(
+                    method="POST",
+                    url=CHAT_URL,
+                    headers=self.headers,
+                    json=payload,
+                    timeout=600.0,
+            ) as response:
+                # 检查是否遇到Cloudflare挑战
+                if response.status_code == 403 or response.status_code == 503:
+                    content = await response.aread()
+                    content_text = content.decode('utf-8', errors='ignore')
+                    if "Just a moment" in content_text or "challenge-running" in content_text:
+                        # 处理Cloudflare挑战
+                        success = await self._handle_cloudflare(CHAT_URL)
+                        if success:
+                            # 重新尝试请求
+                            raise Exception("需要重试请求")  # 触发async_retry装饰器
+                        else:
+                            yield "Cloudflare挑战失败，请检查cookie或更换IP", {"error": "Cloudflare challenge failed"}
+                            return
 
-                if "error" in chunk and "isThinking" not in chunk:
-                    # error_message = chunk_json.get("error").get("message")
-                    yield chunk, chunk_json
-                    return
+                # 常规响应处理
+                is_first_chunk = True
+                async for chunk_bytes in response.aiter_lines():
+                    chunk = chunk_bytes.decode("utf-8")
+                    if is_first_chunk:
+                        logger.debug(f"First chunk: {chunk}")
+                        is_first_chunk = False
+                    try:
+                        chunk_json = json.loads(chunk)
+                    except json.JSONDecodeError:
+                        logger.debug(chunk)
+                        chunk_json = {}
+                        yield chunk, {}
 
-                response = (
-                    chunk_json.get("result", {}).get("response", {}).get("token", "")
-                )
-                yield response, chunk_json
+                    if "error" in chunk and "isThinking" not in chunk:
+                        yield chunk, chunk_json
+                        return
 
-    # @async_retry(retries=4, delay=3)
+                    response = (
+                        chunk_json.get("result", {}).get("response", {}).get("token", "")
+                    )
+                    yield response, chunk_json
+
+        except Exception as e:
+            logger.error(f"聊天请求出错: {e}")
+            # 检查是否是连接问题，可能是被Cloudflare阻止
+            if "Connection" in str(e) or "Timeout" in str(e):
+                # 尝试处理Cloudflare
+                await self._handle_cloudflare(CHAT_URL)
+            yield f"请求出错: {str(e)}", {"error": str(e)}
+
+    # 为rate_limit请求也添加Cloudflare处理
+    @async_retry(retries=4, delay=3)
     async def _get_single_rate_limit(self, request_kind, model_name="grok-3"):
         """Helper method to fetch rate limit for a specific request kind"""
         url = RATE_LIMIT_URL
@@ -166,14 +238,25 @@ class GrokClient:
         json_response = {
             "windowSizeSeconds": 0,
             "remainingQueries": 0,
-            
         }
         try:
             rate_limit_response = await self.client.post(
                 url, headers=self.headers, json=payload
             )
+
+            # 检查是否遇到Cloudflare挑战
+            if rate_limit_response.status_code == 403 or rate_limit_response.status_code == 503:
+                content = rate_limit_response.text
+                if "Just a moment" in content or "challenge-running" in content:
+                    # 处理Cloudflare挑战
+                    success = await self._handle_cloudflare(url)
+                    if success:
+                        # 重新尝试请求
+                        raise Exception("需要重试请求")  # 触发async_retry装饰器
+
             json_response = rate_limit_response.json()
-        except:
+        except Exception as e:
+            logger.error(f"获取rate limit时出错: {e}")
             pass
         logger.debug(json_response)
         return request_kind, json_response
@@ -189,7 +272,5 @@ class GrokClient:
 
         # Format results into a dictionary {request_kind: rate_limit_data}
         rate_limits = {kind: data for kind, data in results}
-        # {'DEFAULT': {'windowSizeSeconds': 7200, 'remainingQueries': 75, 'totalQueries': 100},
-        #  'REASONING': {'windowSizeSeconds': 7200, 'remainingQueries': 17, 'totalQueries': 30},
-        #  'DEEPSEARCH': {'windowSizeSeconds': 7200, 'remainingQueries': 25, 'totalQueries': 30}}
+
         return rate_limits

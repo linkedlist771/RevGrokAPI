@@ -166,8 +166,9 @@ class GrokClient:
         rate_limit_response = await self.client.post(
             url, headers=self.headers, json=payload
         )
-        logger.debug(rate_limit_response)
-        return request_kind, rate_limit_response.json()
+        json_response = rate_limit_response.json()
+        logger.debug(json_response)
+        return request_kind, json_response
 
     async def get_rate_limit(self):
         """Fetch rate limits for all model types concurrently using asyncio.gather"""

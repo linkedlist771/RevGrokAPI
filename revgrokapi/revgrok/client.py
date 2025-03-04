@@ -105,10 +105,7 @@ class GrokClient:
         self.client = AsyncSession(
             impersonate=BrowserType.chrome120,
             proxies=PROXIES,
-            browser_args=[
-                "--disable-blink-features=AutomationControlled",
-                "--disable-features=IsolateOrigins,site-per-process",
-            ],
+
             timeout=60.0  # 增加默认超时时间
         )
         self.cf_clearance = self._extract_cf_clearance(cookie)

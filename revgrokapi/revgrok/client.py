@@ -163,11 +163,15 @@ class GrokClient:
             "requestKind": request_kind,
             "modelName": model_name,
         }
-        rate_limit_response = await self.client.post(
-            url, headers=self.headers, json=payload
-        )
-        json_response = rate_limit_response.json()
-        logger.debug(rate_limit_response)
+        json_response = {}
+        try:
+            rate_limit_response = await self.client.post(
+                url, headers=self.headers, json=payload
+            )
+            json_response = rate_limit_response.json()
+        except:
+            pass
+        logger.debug(json_response)
         return request_kind, json_response
 
     async def get_rate_limit(self):

@@ -166,7 +166,7 @@ class GrokClient:
         rate_limit_response = await self.client.post(
             url, headers=self.headers, json=payload
         )
-        json_response = rate_limit_response
+        json_response = rate_limit_response.json()
         logger.debug(rate_limit_response)
         return request_kind, json_response
 

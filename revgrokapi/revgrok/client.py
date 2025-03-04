@@ -155,7 +155,7 @@ class GrokClient:
                 )
                 yield response, chunk_json
 
-    @async_retry(retries=4, delay=3)
+    # @async_retry(retries=4, delay=3)
     async def _get_single_rate_limit(self, request_kind, model_name="grok-3"):
         """Helper method to fetch rate limit for a specific request kind"""
         url = RATE_LIMIT_URL

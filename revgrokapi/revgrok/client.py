@@ -163,7 +163,11 @@ class GrokClient:
             "requestKind": request_kind,
             "modelName": model_name,
         }
-        json_response = {}
+        json_response = {
+            "windowSizeSeconds": 0,
+            "remainingQueries": 0,
+            
+        }
         try:
             rate_limit_response = await self.client.post(
                 url, headers=self.headers, json=payload
